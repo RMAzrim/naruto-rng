@@ -1,0 +1,14 @@
+[
+  { "id": "pure-clan", "label": "Pure Clan Lineage", "description": "Known descent within one clan line.", "rarity": "Common", "weight": 25, "sourceStatus": "game-original", "tags": ["heritage", "clan"] },
+  { "id": "mixed-clan", "label": "Mixed Clan Heritage", "description": "Ancestry from two or more clans.", "rarity": "Uncommon", "weight": 12, "sourceStatus": "game-original", "tags": ["heritage", "mixed"] },
+  { "id": "distant-descendant", "label": "Distant Clan Descendant", "description": "Remote ancestry with uncertain or diluted inheritance.", "rarity": "Common", "weight": 15, "sourceStatus": "game-original", "tags": ["heritage", "distant"] },
+  { "id": "hidden-lineage", "label": "Hidden / Concealed Lineage", "description": "Ancestry intentionally hidden or unknown to the character.", "rarity": "Uncommon", "weight": 8, "sourceStatus": "game-original", "tags": ["heritage", "hidden"] },
+  { "id": "lost-bloodline", "label": "Lost Bloodline", "description": "A lineage with very few or no known surviving members.", "rarity": "Rare", "weight": 5, "sourceStatus": "game-original", "tags": ["heritage", "rare"] },
+  { "id": "adopted", "label": "Adopted / Non-Biological Heir", "description": "Raised within a clan or family without biological descent.", "rarity": "Uncommon", "weight": 8, "sourceStatus": "game-original", "tags": ["heritage", "adopted"] },
+  { "id": "civilian", "label": "Civilian / Non-Clan Heritage", "description": "No known shinobi clan lineage.", "rarity": "Common", "weight": 20, "sourceStatus": "game-original", "tags": ["heritage", "civilian"] },
+  { "id": "noble-family", "label": "Noble Family Heritage", "description": "Ancestry from a recognized political or noble family.", "rarity": "Uncommon", "weight": 6, "sourceStatus": "game-original", "tags": ["heritage", "noble"] },
+  { "id": "ancient-mythic", "label": "Ancient / Mythic Ancestry", "description": "Exceptional ancient lineage; must be rare and lore-validated.", "rarity": "Mythic", "weight": 1, "sourceStatus": "game-original", "tags": ["heritage", "mythic", "restricted"] },
+  { "id": "artificially-altered", "label": "Artificially Altered Heritage", "description": "Lineage altered through a documented experiment or procedure; use sparingly.", "rarity": "Rare", "weight": 2, "sourceStatus": "game-original", "tags": ["heritage", "artificial", "restricted"] },
+  { "id": "unknown", "label": "Unknown Heritage", "description": "No reliable information.", "rarity": "Common", "weight": 15, "sourceStatus": "game-original", "tags": ["heritage", "unknown"] },
+  { "id": "oc-heritage", "label": "OC Heritage", "description": "Original lineage, explicitly labeled custom content.", "rarity": "Uncommon", "weight": 5, "sourceStatus": "oc", "tags": ["heritage", "oc", "custom"] }
+]

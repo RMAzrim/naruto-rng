@@ -1,0 +1,17 @@
+[
+  { "id": "chosen-one", "label": "The Chosen One", "description": "Marked by prophecy or circumstance for a great role.", "rarity": "Rare", "weight": 5, "sourceStatus": "game-original", "tags": ["fate", "narrative"] },
+  { "id": "cursed-destiny", "label": "Cursed Destiny", "description": "Burdened by a fate that brings suffering.", "rarity": "Rare", "weight": 5, "sourceStatus": "game-original", "tags": ["fate", "narrative"] },
+  { "id": "forgotten-heir", "label": "The Forgotten Heir", "description": "Rightful heir to a legacy that was lost or hidden.", "rarity": "Uncommon", "weight": 7, "sourceStatus": "game-original", "tags": ["fate", "heritage"] },
+  { "id": "last-survivor", "label": "Last Survivor", "description": "The only one left after a tragedy or war.", "rarity": "Uncommon", "weight": 7, "sourceStatus": "game-original", "tags": ["fate", "tragedy"] },
+  { "id": "unwritten-fate", "label": "A Fate Yet Unwritten", "description": "No prophecy claims them; the future is open.", "rarity": "Common", "weight": 20, "sourceStatus": "game-original", "tags": ["fate", "open"] },
+  { "id": "destined-greatness", "label": "Destined for Greatness", "description": "Expected to rise to the highest ranks.", "rarity": "Rare", "weight": 6, "sourceStatus": "game-original", "tags": ["fate", "narrative"] },
+  { "id": "unwanted-child", "label": "The Unwanted Child", "description": "Rejected by family or village from birth.", "rarity": "Uncommon", "weight": 8, "sourceStatus": "game-original", "tags": ["fate", "tragedy"] },
+  { "id": "reincarnated-soul", "label": "The Reincarnated Soul", "description": "Believed to carry a past life's spirit.", "rarity": "Rare", "weight": 4, "sourceStatus": "game-original", "tags": ["fate", "mythic"] },
+  { "id": "greatest-threat", "label": "The World's Greatest Threat", "description": "Feared as a potential danger to all.", "rarity": "Rare", "weight": 4, "sourceStatus": "game-original", "tags": ["fate", "villain"] },
+  { "id": "defied-fate", "label": "The One Who Defied Fate", "description": "Rejected the destiny written for them.", "rarity": "Epic", "weight": 3, "sourceStatus": "game-original", "tags": ["fate", "narrative"] },
+  { "id": "reluctant-successor", "label": "The Reluctant Successor", "description": "Inherits a role they never wanted.", "rarity": "Uncommon", "weight": 7, "sourceStatus": "game-original", "tags": ["fate", "narrative"] },
+  { "id": "guardian-legacy", "label": "The Guardian of a Lost Legacy", "description": "Protects the memory and power of a lost clan or age.", "rarity": "Rare", "weight": 5, "sourceStatus": "game-original", "tags": ["fate", "heritage"] },
+  { "id": "name-erased", "label": "The Name Erased from History", "description": "Their existence has been removed from records.", "rarity": "Rare", "weight": 4, "sourceStatus": "game-original", "tags": ["fate", "mystery"] },
+  { "id": "must-choose", "label": "The One Who Must Choose", "description": "Standing at a crossroads that defines everything.", "rarity": "Common", "weight": 15, "sourceStatus": "game-original", "tags": ["fate", "decision"] },
+  { "id": "survivor-broken-era", "label": "The Survivor of a Broken Era", "description": "Lived through a time that no longer exists.", "rarity": "Uncommon", "weight": 6, "sourceStatus": "game-original", "tags": ["fate", "era"] }
+]

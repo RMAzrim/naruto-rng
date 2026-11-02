@@ -1,0 +1,152 @@
+[
+  {
+    "id": "ancient",
+    "label": "Ancient Era",
+    "description": "The era before hidden villages, when shinobi clans warred independently and the Sage of Six Paths walked the earth.",
+    "startPeriod": "Pre-history",
+    "endPeriod": "Before hidden villages",
+    "tags": ["ancient", "pre-village"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "sage-six-paths",
+    "label": "Sage of Six Paths Era",
+    "description": "The time of Hagoromo Ōtsutsuki, the first shinobi, and the birth of ninshū.",
+    "startPeriod": "Mythic ancient past",
+    "endPeriod": "Before hidden villages",
+    "tags": ["mythic", "sage"],
+    "sourceStatus": "canon",
+    "rarity": "Rare"
+  },
+  {
+    "id": "warring-states",
+    "label": "Warring States Era",
+    "description": "Constant warfare between shinobi clans before the founding of hidden villages.",
+    "startPeriod": "Before village founding",
+    "endPeriod": "Hidden Village Founding Era",
+    "tags": ["war", "clan-era"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "founding",
+    "label": "Hidden Village Founding Era",
+    "description": "The first hidden villages are founded, ending the Warring States period.",
+    "startPeriod": "Founding of Konoha",
+    "endPeriod": "First Shinobi World War",
+    "tags": ["founding", "village-era"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "first-war",
+    "label": "First Shinobi World War",
+    "description": "The first great war between the hidden villages.",
+    "startPeriod": "Post-founding",
+    "endPeriod": "Second Shinobi World War",
+    "tags": ["war"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "second-war",
+    "label": "Second Shinobi World War",
+    "description": "The second great war between the hidden villages.",
+    "startPeriod": "Post-first war",
+    "endPeriod": "Third Shinobi World War",
+    "tags": ["war"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "third-war",
+    "label": "Third Shinobi World War",
+    "description": "The third great war, defining a generation of Konoha shinobi.",
+    "startPeriod": "Post-second war",
+    "endPeriod": "Pre-Naruto Era",
+    "tags": ["war"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "pre-naruto",
+    "label": "Pre-Naruto Era",
+    "description": "The years just before Naruto Uzumaki's birth and the Nine-Tails attack.",
+    "startPeriod": "Post-third war",
+    "endPeriod": "Naruto Part I Era",
+    "tags": ["peace", "pre-series"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "naruto-part1",
+    "label": "Naruto Part I Era",
+    "description": "Naruto Uzumaki's early years as a Genin and the Chūnin Exams.",
+    "startPeriod": "Start of Part I",
+    "endPeriod": "Time skip",
+    "tags": ["part1", "canon"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "shippuden",
+    "label": "Shippuden Era",
+    "description": "Naruto Uzumaki's teenage years after the time skip.",
+    "startPeriod": "Shippuden start",
+    "endPeriod": "Fourth Shinobi World War",
+    "tags": ["shippuden", "canon"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "fourth-war",
+    "label": "Fourth Shinobi World War",
+    "description": "The Allied Shinobi Forces versus Akatsuki and the Ten-Tails.",
+    "startPeriod": "War start",
+    "endPeriod": "Blank Period",
+    "tags": ["war", "canon"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "blank-period",
+    "label": "Blank Period",
+    "description": "The time between the Fourth Shinobi World War and The Last.",
+    "startPeriod": "Post-fourth war",
+    "endPeriod": "The Last Era",
+    "tags": ["peace", "reconstruction"],
+    "sourceStatus": "canon",
+    "rarity": "Uncommon"
+  },
+  {
+    "id": "the-last",
+    "label": "The Last Era",
+    "description": "The era of The Last: Naruto the Movie, leading into the Boruto era.",
+    "startPeriod": "Post-fourth war",
+    "endPeriod": "Boruto Era",
+    "tags": ["movie-era"],
+    "sourceStatus": "canon",
+    "rarity": "Uncommon"
+  },
+  {
+    "id": "boruto",
+    "label": "Boruto Era",
+    "description": "The next generation, Boruto Uzumaki and his peers as shinobi.",
+    "startPeriod": "Boruto start",
+    "endPeriod": "Two Blue Vortex Era",
+    "tags": ["next-gen", "canon"],
+    "sourceStatus": "canon",
+    "rarity": "Common"
+  },
+  {
+    "id": "two-blue-vortex",
+    "label": "Two Blue Vortex Era",
+    "description": "The timeskip era of Boruto: Two Blue Vortex.",
+    "startPeriod": "Two Blue Vortex start",
+    "endPeriod": "Ongoing",
+    "tags": ["next-gen", "canon"],
+    "sourceStatus": "canon",
+    "rarity": "Rare"
+  }
+]

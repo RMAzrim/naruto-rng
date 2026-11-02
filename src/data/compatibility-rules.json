@@ -1,0 +1,17 @@
+[
+  { "id": "r-001", "type": "eraRange", "optionId": "akatsuki", "targetSpinId": "affiliation", "eraIds": ["naruto-part1", "shippuden", "fourth-war"], "message": "Akatsuki only operates from Naruto Part I onward.", "severity": "error", "customOnly": false },
+  { "id": "r-002", "type": "eraRange", "optionId": "seven-swordsmen", "targetSpinId": "affiliation", "eraIds": ["third-war", "pre-naruto", "naruto-part1", "shippuden", "fourth-war"], "message": "Seven Swordsmen era window is Third War to Fourth War.", "severity": "error", "customOnly": false },
+  { "id": "r-003", "type": "eraRange", "optionId": "allied-forces", "targetSpinId": "affiliation", "eraIds": ["fourth-war"], "message": "Allied Shinobi Forces only exist during the Fourth Shinobi World War.", "severity": "error", "customOnly": false },
+  { "id": "r-004", "type": "excludes", "optionId": "rinnegan", "targetOptionId": "sharingan", "targetSpinId": "dojutsu", "message": "Rinnegan and Sharingan cannot both be active eye abilities.", "severity": "error", "customOnly": false },
+  { "id": "r-005", "type": "excludes", "optionId": "tenseigan", "targetOptionId": "byakugan", "targetSpinId": "dojutsu", "message": "Tenseigan and Byakugan cannot both be active eye abilities.", "severity": "error", "customOnly": false },
+  { "id": "r-006", "type": "requires", "optionId": "mangekyo-sharingan", "targetOptionId": "sharingan", "targetSpinId": "dojutsu", "message": "Mangekyō Sharingan requires base Sharingan first.", "severity": "error", "customOnly": false },
+  { "id": "r-007", "type": "requires", "optionId": "byakugan", "targetOptionId": "clan-hyuga", "targetSpinId": "clan", "message": "Byakugan requires Hyuga clan lineage.", "severity": "error", "customOnly": false },
+  { "id": "r-008", "type": "requires", "optionId": "sharingan", "targetOptionId": "clan-uchiha", "targetSpinId": "clan", "message": "Sharingan requires Uchiha clan lineage.", "severity": "error", "customOnly": false },
+  { "id": "r-009", "type": "requires", "optionId": "wood", "targetOptionId": "clan-senju", "targetSpinId": "chakra", "message": "Wood Release requires Senju lineage.", "severity": "error", "customOnly": false },
+  { "id": "r-010", "type": "requires", "optionId": "ice", "targetOptionId": "clan-yuki", "targetSpinId": "chakra", "message": "Ice Release requires Yuki clan lineage.", "severity": "error", "customOnly": false },
+  { "id": "r-011", "type": "heritageMatch", "optionId": "ancient-mythic", "heritageStatuses": ["ancient-mythic"], "message": "Ancient / Mythic Ancestry requires matching heritage status.", "severity": "warning", "customOnly": false },
+  { "id": "r-012", "type": "warningOnly", "optionId": "kage", "targetSpinId": "rank", "message": "Kage is a political title; confirm rank matches combat role.", "severity": "info", "customOnly": false },
+  { "id": "r-013", "type": "customOnly", "optionId": "oc-clan", "targetSpinId": "clan", "message": "OC clan only available in AU mode.", "severity": "info", "customOnly": true },
+  { "id": "r-014", "type": "customOnly", "optionId": "oc-dojutsu", "targetSpinId": "dojutsu", "message": "OC Dojutsu only available in AU mode.", "severity": "info", "customOnly": true },
+  { "id": "r-015", "type": "warningOnly", "optionId": "mixed-clan", "targetSpinId": "heritage", "message": "Mixed heritage may dilute inherited abilities; verify bloodline trait compatibility.", "severity": "warning", "customOnly": false }
+]

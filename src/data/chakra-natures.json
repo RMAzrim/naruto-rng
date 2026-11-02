@@ -1,0 +1,13 @@
+[
+  { "id": "fire", "label": "Fire Release", "description": "Katon; offensive, destructive chakra nature.", "rarity": "Common", "weight": 20, "sourceStatus": "canon", "tags": ["nature", "basic"] },
+  { "id": "wind", "label": "Wind Release", "description": "Fūton; piercing, cutting, short-to-mid range.", "rarity": "Common", "weight": 20, "sourceStatus": "canon", "tags": ["nature", "basic"] },
+  { "id": "lightning", "label": "Lightning Release", "description": "Raiton; speed, numbing, mid-range.", "rarity": "Common", "weight": 20, "sourceStatus": "canon", "tags": ["nature", "basic"] },
+  { "id": "earth", "label": "Earth Release", "description": "Doton; defense, barriers, terrain manipulation.", "rarity": "Common", "weight": 20, "sourceStatus": "canon", "tags": ["nature", "basic"] },
+  { "id": "water", "label": "Water Release", "description": "Suiton; flexible, needs water source or generated from chakra.", "rarity": "Common", "weight": 20, "sourceStatus": "canon", "tags": ["nature", "basic"] },
+  { "id": "yin", "label": "Yin Release", "description": "Spiritual energy; genjutsu and imagination-based techniques.", "rarity": "Rare", "weight": 6, "sourceStatus": "canon", "tags": ["nature", "spiritual"] },
+  { "id": "yang", "label": "Yang Release", "description": "Physical energy; vitality, healing, life force.", "rarity": "Rare", "weight": 6, "sourceStatus": "canon", "tags": ["nature", "physical"] },
+  { "id": "yin-yang", "label": "Yin-Yang Release", "description": "Combined spiritual and physical energy; strict rules only.", "rarity": "Mythic", "weight": 1, "sourceStatus": "canon", "tags": ["nature", "combined", "restricted"], "prerequisites": ["chakra-yin", "chakra-yang"] },
+  { "id": "wood", "label": "Wood Release", "description": "Mokuton; Earth + Water, Senju/Kaguya lineage.", "rarity": "Mythic", "weight": 1, "sourceStatus": "canon", "tags": ["nature", "combined", "restricted", "clan-senju"], "prerequisites": ["clan-senju", "chakra-earth", "chakra-water"] },
+  { "id": "ice", "label": "Ice Release", "description": "Hyōton; Water + Wind, Yuki clan bloodline.", "rarity": "Rare", "weight": 3, "sourceStatus": "canon", "tags": ["nature", "combined", "restricted", "clan-yuki"], "prerequisites": ["clan-yuki", "chakra-water", "chakra-wind"] },
+  { "id": "oc-nature", "label": "OC Nature Transformation", "description": "Original nature, explicitly labeled custom content.", "rarity": "Rare", "weight": 4, "sourceStatus": "oc", "tags": ["nature", "oc", "custom"] }
+]

@@ -1,0 +1,11 @@
+[
+  { "id": "none", "label": "None", "description": "No summoning contract.", "rarity": "Common", "weight": 45, "sourceStatus": "game-original", "tags": ["summoning", "none"] },
+  { "id": "toad", "label": "Toad", "description": "Mount Myōboku contract; strong allies in battle.", "rarity": "Uncommon", "weight": 12, "sourceStatus": "canon", "tags": ["summoning", "animal"] },
+  { "id": "snake", "label": "Snake", "description": "Ryūchi Cave contract; associated with secrecy and poison.", "rarity": "Uncommon", "weight": 10, "sourceStatus": "canon", "tags": ["summoning", "animal"] },
+  { "id": "slug", "label": "Slug", "description": "Shikkotsu Forest contract; healing and support.", "rarity": "Rare", "weight": 5, "sourceStatus": "canon", "tags": ["summoning", "animal", "medical"] },
+  { "id": "monkey", "label": "Monkey", "description": "Monkey King contract; taijutsu and agility allies.", "rarity": "Rare", "weight": 5, "sourceStatus": "canon", "tags": ["summoning", "animal"] },
+  { "id": "dog-ninken", "label": "Dog / Ninken", "description": "Ninken partners for tracking and combat.", "rarity": "Uncommon", "weight": 10, "sourceStatus": "canon", "tags": ["summoning", "animal", "inuzuka"] },
+  { "id": "hawk", "label": "Hawk / Bird", "description": "Avian summons for scouting and speed.", "rarity": "Rare", "weight": 5, "sourceStatus": "canon", "tags": ["summoning", "animal", "scout"] },
+  { "id": "other-contract", "label": "Other Verified Animal Contract", "description": "Less common canon summon type.", "rarity": "Rare", "weight": 4, "sourceStatus": "canon", "tags": ["summoning", "animal", "rare"] },
+  { "id": "oc-summon", "label": "OC Summon Contract", "description": "Original summon contract, explicitly labeled custom content.", "rarity": "Rare", "weight": 4, "sourceStatus": "oc", "tags": ["summoning", "oc", "custom"] }
+]

@@ -1,0 +1,11 @@
+[
+  { "id": "academy", "label": "Academy Student", "description": "Beginner shinobi in training.", "rarity": "Common", "weight": 10, "sourceStatus": "canon", "tags": ["rank", "beginner"], "combatTier": 1 },
+  { "id": "genin", "label": "Genin", "description": "Lowest active shinobi rank.", "rarity": "Common", "weight": 30, "sourceStatus": "canon", "tags": ["rank"], "combatTier": 2 },
+  { "id": "chunin", "label": "Chūnin", "description": "Qualified to lead missions and mentor genin.", "rarity": "Common", "weight": 20, "sourceStatus": "canon", "tags": ["rank"], "combatTier": 3 },
+  { "id": "jonin", "label": "Jōnin", "description": "Elite shinobi capable of independent missions.", "rarity": "Uncommon", "weight": 15, "sourceStatus": "canon", "tags": ["rank"], "combatTier": 4 },
+  { "id": "tokubetsu-jonin", "label": "Tokubetsu Jōnin", "description": "Jōnin-level in one specialized field.", "rarity": "Uncommon", "weight": 8, "sourceStatus": "canon", "tags": ["rank", "specialist"], "combatTier": 4 },
+  { "id": "anbu", "label": "ANBU", "description": "Elite covert operations role (not a universal rank).", "rarity": "Rare", "weight": 5, "sourceStatus": "canon", "tags": ["rank", "elite", "organization"], "combatTier": 5 },
+  { "id": "kage", "label": "Kage", "description": "Leader of a hidden village.", "rarity": "Mythic", "weight": 1, "sourceStatus": "canon", "tags": ["rank", "political", "leader"], "combatTier": 5 },
+  { "id": "missing-nin", "label": "Missing-nin", "description": "Village deserter; rank varies by origin.", "rarity": "Uncommon", "weight": 8, "sourceStatus": "canon", "tags": ["rank", "rogue"], "combatTier": 3 },
+  { "id": "civilian", "label": "Civilian", "description": "Not a shinobi.", "rarity": "Common", "weight": 4, "sourceStatus": "canon", "tags": ["rank", "non-combat"], "combatTier": 0 }
+]

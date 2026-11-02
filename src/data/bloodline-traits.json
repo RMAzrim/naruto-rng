@@ -1,0 +1,10 @@
+[
+  { "id": "none", "label": "No Inherited Special Ability", "description": "The character expresses no inherited bloodline trait.", "rarity": "Common", "weight": 40, "sourceStatus": "game-original", "tags": ["bloodline", "none"] },
+  { "id": "dormant", "label": "Dormant Inherited Trait", "description": "An inherited trait exists but is not awakened.", "rarity": "Uncommon", "weight": 15, "sourceStatus": "game-original", "tags": ["bloodline", "dormant"] },
+  { "id": "clan-affinity", "label": "Clan Technique Affinity", "description": "Natural aptitude for a clan's signature techniques (not a Kekkei Genkai).", "rarity": "Common", "weight": 18, "sourceStatus": "game-original", "tags": ["bloodline", "affinity"] },
+  { "id": "kekkai-genkai", "label": "Verified Kekkei Genkai", "description": "A confirmed bloodline limit passed down genetically.", "rarity": "Rare", "weight": 10, "sourceStatus": "game-original", "tags": ["bloodline", "kekkai-genkai"] },
+  { "id": "kekkai-tota", "label": "Verified Kekkei Tota", "description": "Extremely rare advanced bloodline combination where lore supports it.", "rarity": "Mythic", "weight": 1, "sourceStatus": "game-original", "tags": ["bloodline", "kekkai-tota", "restricted"] },
+  { "id": "dojutsu-inheritance", "label": "Dojutsu Inheritance", "description": "Inherited eye ability, subject to separate Dojutsu validation.", "rarity": "Rare", "weight": 6, "sourceStatus": "game-original", "tags": ["bloodline", "dojutsu"] },
+  { "id": "oc-inherited", "label": "OC Inherited Ability", "description": "Original inherited ability, explicitly labeled OC.", "rarity": "Uncommon", "weight": 6, "sourceStatus": "oc", "tags": ["bloodline", "oc", "custom"] },
+  { "id": "artificial-trait", "label": "Artificially Acquired Trait", "description": "Clearly distinguished from natural inheritance.", "rarity": "Rare", "weight": 4, "sourceStatus": "game-original", "tags": ["bloodline", "artificial", "restricted"] }
+]

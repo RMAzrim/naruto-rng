@@ -1,0 +1,11 @@
+[
+  { "id": "unknown", "label": "Unknown", "description": "No reputation yet; a blank slate.", "rarity": "Common", "weight": 30, "sourceStatus": "game-original", "tags": ["reputation"] },
+  { "id": "respected", "label": "Respected", "description": "Looked up to by peers and villagers.", "rarity": "Common", "weight": 20, "sourceStatus": "game-original", "tags": ["reputation", "positive"] },
+  { "id": "feared", "label": "Feared", "description": "Others avoid or dread facing them.", "rarity": "Uncommon", "weight": 12, "sourceStatus": "game-original", "tags": ["reputation", "negative"] },
+  { "id": "admired", "label": "Admired", "description": "A role model others want to emulate.", "rarity": "Uncommon", "weight": 10, "sourceStatus": "game-original", "tags": ["reputation", "positive"] },
+  { "id": "disgraced", "label": "Disgraced", "description": "Fallen from honor; trust is lost.", "rarity": "Rare", "weight": 5, "sourceStatus": "game-original", "tags": ["reputation", "negative"] },
+  { "id": "wanted", "label": "Wanted", "description": "Authorities or enemies seek them.", "rarity": "Rare", "weight": 6, "sourceStatus": "game-original", "tags": ["reputation", "negative", "criminal"] },
+  { "id": "misunderstood", "label": "Misunderstood", "description": "Judged unfairly for actions or origin.", "rarity": "Uncommon", "weight": 8, "sourceStatus": "game-original", "tags": ["reputation", "neutral"] },
+  { "id": "legendary", "label": "Legendary", "description": "Stories of their deeds are widely told.", "rarity": "Epic", "weight": 4, "sourceStatus": "game-original", "tags": ["reputation", "positive", "rare"] },
+  { "id": "controversial", "label": "Controversial", "description": "Opinions are sharply divided.", "rarity": "Rare", "weight": 5, "sourceStatus": "game-original", "tags": ["reputation", "neutral"] }
+]

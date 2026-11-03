@@ -28,13 +28,24 @@ export interface GenerationSettings {
   name?: string;
   nameSource?: 'manual' | 'generated';
   eraId?: string;
+  alignmentId?: string;
+  villageId?: string;
   seed?: string;
   /** Optional overrides used by the staged wheel flow. */
   clanId?: string;
   heritageId?: string;
   bloodlineId?: string;
+  dojutsuId?: string;
+  chakraId?: string;
+  affiliationId?: string;
   rankId?: string;
   fightingStyleId?: string;
+  summoningId?: string;
+  personalityId?: string;
+  weaknessId?: string;
+  fateId?: string;
+  titleId?: string;
+  reputationId?: string;
 }
 
 export interface DataContext {
@@ -71,28 +82,39 @@ export function generateCharacter(
   const name = settings.name || generateRandomName(rng);
   const nameSource = settings.nameSource || (settings.name ? 'manual' : 'generated');
 
-  const alignment = toSpinResult(pickOption(data.alignments, rng));
-  const origin = generateOrigin(data.villages, rng, era, mode);
+  const alignmentOpt = pickOption(data.alignments, rng, settings.alignmentId, undefined, era, mode);
+  const alignment = toSpinResult(alignmentOpt);
+  const origin = generateOrigin(data.villages, rng, era, mode, settings.villageId);
   const clanOpt = pickOption(data.clans, rng, settings.clanId, origin, era, mode);
   const clan = toSpinResult(clanOpt);
   const heritage = generateHeritage(data.heritageStatuses, rng, clan, era, mode, settings.heritageId);
   const bloodline = generateBloodline(data.bloodlineTraits, rng, heritage, clan, mode, settings.bloodlineId);
-  const dojutsu = generateDojutsu(data.dojutsu, rng, clan, heritage, bloodline, mode);
-  const chakra = generateChakra(data.chakraNatures, rng, clan, bloodline, mode);
-  const affiliation = generateAffiliations(data.affiliations, rng, era, mode);
+  const dojutsuOpt = pickOption(data.dojutsu, rng, settings.dojutsuId, undefined, era, mode);
+  const dojutsu = generateDojutsu(data.dojutsu, rng, clan, heritage, bloodline, mode, settings.dojutsuId);
+  const chakraOpt = pickOption(data.chakraNatures, rng, settings.chakraId, undefined, era, mode);
+  const chakra = generateChakra(data.chakraNatures, rng, clan, bloodline, mode, settings.chakraId);
+  const affiliationOpt = pickOption(data.affiliations, rng, settings.affiliationId, undefined, era, mode);
+  const affiliation = generateAffiliations(data.affiliations, rng, era, mode, settings.affiliationId);
   const fightingStyleOpt = pickOption(data.fightingStyles, rng, settings.fightingStyleId);
   const fightingStyle = toSpinResult(fightingStyleOpt);
-  const summoning = generateSummoning(data.summonings, rng, mode);
+  const summoningOpt = pickOption(data.summonings, rng, settings.summoningId);
+  const summoning = generateSummoning(data.summonings, rng, mode, settings.summoningId);
   const rankOpt = pickOption(data.ranks, rng, settings.rankId);
   const rankData: RankData = {
     rank: toSpinResult(rankOpt),
     combatTier: rankOpt.combatTier ?? 2,
   };
   const fightingStyleData = buildFightingStyleData(fightingStyle, data.fightingStyles);
-  const personality = generatePersonality(data.personalities, rng);
-  const weaknesses = generateWeaknesses(data.weaknesses, rng, mode);
-  const fate = toSpinResult(pickOption(data.fates, rng));
-  const reputation = generateReputation(data.reputations, rng, alignment, affiliation);
+  const personalityOpt = pickOption(data.personalities, rng, settings.personalityId);
+  const personality = generatePersonality(data.personalities, rng, settings.personalityId);
+  const weaknessOpt = pickOption(data.weaknesses, rng, settings.weaknessId);
+  const weaknesses = generateWeaknesses(data.weaknesses, rng, mode, settings.weaknessId);
+  const fateOpt = pickOption(data.fates, rng, settings.fateId);
+  const fate = toSpinResult(fateOpt);
+  const reputationOpt = pickOption(data.reputations, rng, settings.reputationId);
+  const reputation = generateReputation(data.reputations, rng, alignment, affiliation, settings.reputationId);
+  const titleOpt = pickOption(data.titles, rng, settings.titleId, undefined, era, mode);
+  const title = toSpinResult(titleOpt);
 
   const abilities = deriveAbilities(data.abilities, fightingStyleOpt, chakra, bloodline, dojutsu, summoning, rankOpt);
   const stats = deriveStats(rankOpt, fightingStyleOpt, abilities, weaknesses, chakra);
@@ -121,7 +143,7 @@ export function generateCharacter(
     mode,
     era,
     alignment,
-    title: toSpinResult(pickOption(data.titles, rng)),
+    title,
     origin,
     clan,
     heritage,
@@ -184,9 +206,10 @@ function generateOrigin(
   villages: SpinOption[],
   rng: SeededRandom,
   era: SpinResult,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): OriginData {
-  const birthplace = toSpinResult(pickOption(villages, rng, undefined, undefined, era, mode));
+  const birthplace = toSpinResult(pickOption(villages, rng, preferredId, undefined, era, mode));
   const raisedIn = toSpinResult(pickOption(villages, rng, undefined, undefined, era, mode));
   const currentAffiliation = toSpinResult(pickOption(villages, rng, undefined, undefined, era, mode));
   return { birthplace, raisedIn, currentAffiliation };
@@ -235,9 +258,10 @@ function generateDojutsu(
   clan: SpinResult,
   heritage: HeritageData,
   bloodline: BloodlineData,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): DojutsuData {
-  const eye = toSpinResult(pickOption(dojutsuList, rng));
+  const eye = toSpinResult(pickOption(dojutsuList, rng, preferredId, undefined, undefined, mode));
   let stage = 'None';
   let mastery: DojutsuData['mastery'] = 'none';
   let staminaCost = 0;
@@ -258,9 +282,10 @@ function generateChakra(
   rng: SeededRandom,
   clan: SpinResult,
   bloodline: BloodlineData,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): ChakraData {
-  const primary = toSpinResult(pickOption(natures, rng));
+  const primary = toSpinResult(pickOption(natures, rng, preferredId, undefined, undefined, mode));
   const secondary = rng.next() < 0.3 ? toSpinResult(pickOption(natures, rng)) : null;
   return {
     primary,
@@ -275,12 +300,13 @@ function generateAffiliations(
   affiliations: SpinOption[],
   rng: SeededRandom,
   era: SpinResult,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): AffiliationData[] {
   const count = rng.next() < 0.7 ? 1 : 2;
   const result: AffiliationData[] = [];
   for (let i = 0; i < count; i++) {
-    const org = toSpinResult(pickOption(affiliations, rng, undefined, undefined, era, mode));
+    const org = toSpinResult(pickOption(affiliations, rng, i === 0 ? preferredId : undefined, undefined, era, mode));
     result.push({
       organization: org,
       role: 'Member',
@@ -304,9 +330,10 @@ function buildFightingStyleData(style: SpinResult, allStyles: SpinOption[]): Fig
 function generateSummoning(
   summonings: SpinOption[],
   rng: SeededRandom,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): SummoningData {
-  const contract = toSpinResult(pickOption(summonings, rng));
+  const contract = toSpinResult(pickOption(summonings, rng, preferredId));
   const proficiency: SummoningData['proficiency'] = contract.optionId === 'none' ? 'none' : rng.pick(['basic', 'advanced', 'master']);
   return {
     contract,
@@ -317,9 +344,11 @@ function generateSummoning(
 
 function generatePersonality(
   personalities: SpinOption[],
-  rng: SeededRandom
+  rng: SeededRandom,
+  preferredId?: string
 ): PersonalityData {
-  const primary = rng.pick(personalities).label;
+  const primaryOpt = pickOption(personalities, rng, preferredId);
+  const primary = primaryOpt.label;
   const secondary = rng.shuffle(personalities).slice(0, 2).map((p) => p.label);
   return {
     primaryTrait: primary,
@@ -334,9 +363,11 @@ function generatePersonality(
 function generateWeaknesses(
   weaknesses: SpinOption[],
   rng: SeededRandom,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): WeaknessData[] {
-  const primary = toSpinResult(pickOption(weaknesses, rng));
+  const primaryOpt = pickOption(weaknesses, rng, preferredId);
+  const primary = toSpinResult(primaryOpt);
   const result: WeaknessData[] = [
     {
       id: primary.optionId,
@@ -347,7 +378,8 @@ function generateWeaknesses(
     },
   ];
   if (rng.next() < 0.4) {
-    const secondary = toSpinResult(pickOption(weaknesses, rng));
+    const secondaryOpt = pickOption(weaknesses, rng);
+    const secondary = toSpinResult(secondaryOpt);
     result.push({
       id: secondary.optionId,
       category: secondary.category || 'General',
@@ -363,9 +395,10 @@ function generateReputation(
   reputations: SpinOption[],
   rng: SeededRandom,
   alignment: SpinResult,
-  affiliation: AffiliationData[]
+  affiliation: AffiliationData[],
+  preferredId?: string
 ): ReputationData {
-  const rep = toSpinResult(pickOption(reputations, rng));
+  const rep = toSpinResult(pickOption(reputations, rng, preferredId));
   return {
     label: rep.label,
     description: `${rep.label} reputation based on alignment and history.`,

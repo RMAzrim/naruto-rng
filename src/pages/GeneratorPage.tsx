@@ -7,15 +7,46 @@ import { SeededRandom, weightedSelect } from '@/engine/rng';
 import { loadCollection, saveCharacter } from '@/engine/persistence';
 import { useTheme, type DataMode } from '@/theme/ThemeContext';
 import {
+  alignments,
+  affiliations,
   bloodlineTraits,
+  chakraNatures,
   clans,
+  dojutsu,
+  eras,
   fightingStyles,
+  fates,
   heritageStatuses,
+  personalities,
   ranks,
+  reputations,
+  summonings,
+  titles,
+  villages,
+  weaknesses,
 } from '@/data/index';
 import type { Character, SpinOption } from '@/types';
 
-type StageKey = 'name' | 'clan' | 'heritage' | 'bloodline' | 'rank' | 'style' | 'result';
+type StageKey =
+  | 'name'
+  | 'era'
+  | 'alignment'
+  | 'village'
+  | 'clan'
+  | 'heritage'
+  | 'bloodline'
+  | 'dojutsu'
+  | 'chakra'
+  | 'affiliation'
+  | 'rank'
+  | 'style'
+  | 'summoning'
+  | 'personality'
+  | 'weakness'
+  | 'fate'
+  | 'title'
+  | 'reputation'
+  | 'result';
 type SpinStageKey = Exclude<StageKey, 'name' | 'result'>;
 
 type StageMeta = {
@@ -28,11 +59,58 @@ type StageMeta = {
   options: SpinOption[];
 };
 
-const STAGE_ORDER: StageKey[] = ['name', 'clan', 'heritage', 'bloodline', 'rank', 'style', 'result'];
+const STAGE_ORDER: StageKey[] = [
+  'name',
+  'era',
+  'alignment',
+  'village',
+  'clan',
+  'heritage',
+  'bloodline',
+  'dojutsu',
+  'chakra',
+  'affiliation',
+  'rank',
+  'style',
+  'summoning',
+  'personality',
+  'weakness',
+  'fate',
+  'title',
+  'reputation',
+  'result',
+];
 
 const STAGES: Record<SpinStageKey, StageMeta> = {
+  era: {
+    eyebrow: 'Tahap 02 · Era & Identitas · 1/5',
+    title: 'Era',
+    category: 'Era',
+    prompt: 'Kapan kehidupan shinobi-mu berlangsung?',
+    hint: 'Era menentukan desa, klan, dan organisasi apa yang tersedia.',
+    noun: 'era',
+    options: eras,
+  },
+  alignment: {
+    eyebrow: 'Tahap 02 · Era & Identitas · 2/5',
+    title: 'Pengaturan',
+    category: 'Pengaturan',
+    prompt: 'Seberapa jauhnya dedikasi mu terhadap yang benar?',
+    hint: 'Pengaturan memengaruhi afiliasi dan reputasi, bukan kekuatan langsung.',
+    noun: 'pengaturan',
+    options: alignments,
+  },
+  village: {
+    eyebrow: 'Tahap 03 · Asal & Desa · 1/3',
+    title: 'Desa Asal',
+    category: 'Desa',
+    prompt: 'Desa mana tempat lahirmu?',
+    hint: 'Tempat lahir, tempat tumbuh, dan afiliasi saat ini bisa berbeda.',
+    noun: 'desa',
+    options: villages,
+  },
   clan: {
-    eyebrow: 'Tahap 02 · Klan',
+    eyebrow: 'Tahap 03 · Asal & Desa · 2/3',
     title: 'Klan',
     category: 'Klan',
     prompt: 'Klan apa yang mengalir di darahmu?',
@@ -41,7 +119,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: clans,
   },
   heritage: {
-    eyebrow: 'Tahap 03 · Warisan · 1/2',
+    eyebrow: 'Tahap 03 · Asal & Desa · 3/3',
     title: 'Status warisan',
     category: 'Status warisan',
     prompt: 'Bagaimana garis keturunanmu?',
@@ -50,7 +128,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: heritageStatuses,
   },
   bloodline: {
-    eyebrow: 'Tahap 03 · Warisan · 2/2',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 1/5',
     title: 'Sifat darah',
     category: 'Sifat darah',
     prompt: 'Sifat apa yang diwariskan darahmu?',
@@ -58,8 +136,35 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'sifat darah',
     options: bloodlineTraits,
   },
+  dojutsu: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 2/5',
+    title: 'Dojutsu',
+    category: 'Mata',
+    prompt: 'Apakah kamu mewarisi teknik mata?',
+    hint: 'Dojutsu harus sesuai dengan keturunan dan timeline.',
+    noun: 'dojutsu',
+    options: dojutsu,
+  },
+  chakra: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 3/5',
+    title: 'Elemen Chakra',
+    category: 'Chakra',
+    prompt: 'Elemen chakra primer apa yang kamu miliki?',
+    hint: 'Kebanyakan shinobi punya satu elemen utama, beberapa punya dua.',
+    noun: 'elemen chakra',
+    options: chakraNatures,
+  },
+  affiliation: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 4/5',
+    title: 'Afiliasi',
+    category: 'Afiliasi',
+    prompt: 'Organisasi mana yang terkait denganmu?',
+    hint: 'Afiliasi harus sesuai era. Sebuah karakter bisa memiliki afiliasi masa lalu dan kini.',
+    noun: 'afiliasi',
+    options: affiliations,
+  },
   rank: {
-    eyebrow: 'Tahap 04 · Ranga & gaya · 1/2',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 5/5',
     title: 'Ranga',
     category: 'Ranga',
     prompt: 'Sejauh mana reputasi militermu?',
@@ -68,7 +173,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: ranks,
   },
   style: {
-    eyebrow: 'Tahap 04 · Ranga & gaya · 2/2',
+    eyebrow: 'Tahap 05 · Gaya & Summoning · 1/2',
     title: 'Gaya bertarung',
     category: 'Gaya bertarung',
     prompt: 'Bagaimana kamu menghadapi lawan?',
@@ -76,13 +181,70 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'gaya',
     options: fightingStyles,
   },
+  summoning: {
+    eyebrow: 'Tahap 05 · Gaya & Summoning · 2/2',
+    title: 'Perintah Hewan',
+    category: 'Perintah Hewan',
+    prompt: 'Apakah kamu punya kontrak perintah hewan?',
+    hint: 'Kontrak perintah tidak otomatis telah dikuasai.',
+    noun: 'perintah hewan',
+    options: summonings,
+  },
+  personality: {
+    eyebrow: 'Tahap 06 · Kepribadian & Kelemahan · 1/3',
+    title: 'Kepribadian',
+    category: 'Kepribadian',
+    prompt: 'Sifat utama kamu apa?',
+    hint: 'Kepribadian bukan pengaturan moral. Sifat penuh kasih bisa dimiliki penjahat.',
+    noun: 'kepribadian',
+    options: personalities,
+  },
+  weakness: {
+    eyebrow: 'Tahap 06 · Kepribadian & Kelemahan · 2/3',
+    title: 'Kelemahan',
+    category: 'Kelemahan',
+    prompt: 'Kelemahan terbesar kamu apa?',
+    hint: 'Kelemahan menciptakan lawan balik, bukan membuat karakter tak boleh digunakan.',
+    noun: 'kelemahan',
+    options: weaknesses,
+  },
+  fate: {
+    eyebrow: 'Tahap 06 · Kepribadian & Kelemahan · 3/3',
+    title: 'Takdir',
+    category: 'Takdir',
+    prompt: 'Takdir apa yang menunggumu?',
+    hint: 'Takdir adalah metadata naratif, bukan jaminan ramalan.',
+    noun: 'takdir',
+    options: fates,
+  },
+  title: {
+    eyebrow: 'Tahap 07 · Gelar & Reputasi · 1/2',
+    title: 'Gelar',
+    category: 'Gelar',
+    prompt: 'Gelar mana yang cocok untukmu?',
+    hint: 'Gelar adalah label identitas, bukan penambah otomatis kekuatan.',
+    noun: 'gelar',
+    options: titles,
+  },
+  reputation: {
+    eyebrow: 'Tahap 07 · Gelar & Reputasi · 2/2',
+    title: 'Reputasi',
+    category: 'Reputasi',
+    prompt: 'Bagaimana dunia memandangmu?',
+    hint: 'Reputasi dibangun dari tindakan, afiliasi, dan gelar.',
+    noun: 'reputasi',
+    options: reputations,
+  },
 };
 
 const GROUPS: { id: string; label: string; keys: StageKey[] }[] = [
   { id: 'name', label: 'Nama', keys: ['name'] },
-  { id: 'clan', label: 'Klan', keys: ['clan'] },
-  { id: 'heritage', label: 'Warisan', keys: ['heritage', 'bloodline'] },
-  { id: 'rank', label: 'Ranga', keys: ['rank', 'style'] },
+  { id: 'era', label: 'Era', keys: ['era', 'alignment'] },
+  { id: 'village', label: 'Asal & Desa', keys: ['village', 'clan', 'heritage'] },
+  { id: 'power', label: 'Kekuatan', keys: ['bloodline', 'dojutsu', 'chakra', 'affiliation', 'rank'] },
+  { id: 'style', label: 'Gaya & Hewan', keys: ['style', 'summoning'] },
+  { id: 'character', label: 'Kepribadian', keys: ['personality', 'weakness', 'fate'] },
+  { id: 'title', label: 'Gelar', keys: ['title', 'reputation'] },
   { id: 'result', label: 'Hasil', keys: ['result'] },
 ];
 
@@ -144,7 +306,7 @@ export default function GeneratorPage() {
     setCharacter(null);
     setSaved(false);
     setError(null);
-    setStageKey((previous) => (previous === 'name' ? 'name' : 'clan'));
+    setStageKey((previous) => (previous === 'name' ? 'name' : 'era'));
   }, [mode]);
 
   const refreshLeaderboard = useCallback(() => {
@@ -159,12 +321,44 @@ export default function GeneratorPage() {
   }, [refreshLeaderboard]);
 
   const wheelOptions = useMemo(() => {
-    if (stageKey === 'clan') return eligible(STAGES.clan.options, mode);
-    if (stageKey === 'heritage') return eligible(STAGES.heritage.options, mode);
-    if (stageKey === 'bloodline') return eligible(STAGES.bloodline.options, mode);
-    if (stageKey === 'rank') return eligible(STAGES.rank.options, mode);
-    if (stageKey === 'style') return eligible(STAGES.style.options, mode);
-    return [];
+    switch (stageKey) {
+      case 'era':
+        return eligible(STAGES.era.options, mode);
+      case 'alignment':
+        return eligible(STAGES.alignment.options, mode);
+      case 'village':
+        return eligible(STAGES.village.options, mode);
+      case 'clan':
+        return eligible(STAGES.clan.options, mode);
+      case 'heritage':
+        return eligible(STAGES.heritage.options, mode);
+      case 'bloodline':
+        return eligible(STAGES.bloodline.options, mode);
+      case 'dojutsu':
+        return eligible(STAGES.dojutsu.options, mode);
+      case 'chakra':
+        return eligible(STAGES.chakra.options, mode);
+      case 'affiliation':
+        return eligible(STAGES.affiliation.options, mode);
+      case 'rank':
+        return eligible(STAGES.rank.options, mode);
+      case 'style':
+        return eligible(STAGES.style.options, mode);
+      case 'summoning':
+        return eligible(STAGES.summoning.options, mode);
+      case 'personality':
+        return eligible(STAGES.personality.options, mode);
+      case 'weakness':
+        return eligible(STAGES.weakness.options, mode);
+      case 'fate':
+        return eligible(STAGES.fate.options, mode);
+      case 'title':
+        return eligible(STAGES.title.options, mode);
+      case 'reputation':
+        return eligible(STAGES.reputation.options, mode);
+      default:
+        return [];
+    }
   }, [stageKey, mode]);
 
   const displayOptions = useMemo(() => {
@@ -181,7 +375,7 @@ export default function GeneratorPage() {
     if (name.trim() && stageKey !== 'name') {
       rows.push({ category: 'Nama', result: name.trim() });
     }
-    (['clan', 'heritage', 'bloodline', 'rank', 'style'] as SpinStageKey[]).forEach((key) => {
+    (['era', 'alignment', 'village', 'clan', 'heritage', 'bloodline', 'dojutsu', 'chakra', 'affiliation', 'rank', 'style', 'summoning', 'personality', 'weakness', 'fate', 'title', 'reputation'] as SpinStageKey[]).forEach((key) => {
       const answer = answers[key];
       if (answer) rows.push({ category: STAGES[key].category, result: answer.label });
     });
@@ -192,7 +386,7 @@ export default function GeneratorPage() {
     const trimmed = name.trim();
     if (!trimmed) return;
     setName(trimmed);
-    setStageKey('clan');
+    setStageKey('era');
   }, [name]);
 
   const rollName = useCallback(() => {
@@ -256,11 +450,23 @@ export default function GeneratorPage() {
           name: trimmed || undefined,
           nameSource: trimmed ? 'manual' : 'generated',
           seed,
+          eraId: answers.era?.id,
+          alignmentId: answers.alignment?.id,
+          villageId: answers.village?.id,
           clanId: answers.clan?.id,
           heritageId: answers.heritage?.id,
           bloodlineId: answers.bloodline?.id,
+          dojutsuId: answers.dojutsu?.id,
+          chakraId: answers.chakra?.id,
+          affiliationId: answers.affiliation?.id,
           rankId: answers.rank?.id,
           fightingStyleId: answers.style?.id,
+          summoningId: answers.summoning?.id,
+          personalityId: answers.personality?.id,
+          weaknessId: answers.weakness?.id,
+          fateId: answers.fate?.id,
+          titleId: answers.title?.id,
+          reputationId: answers.reputation?.id,
         },
         dataContext
       );
@@ -419,7 +625,7 @@ export default function GeneratorPage() {
               </div>
 
               <p className="hint">
-                Roda pertama menentukan klan. Setiap klan membawa predileksi dan buff yang berbeda.
+                Roda pertama menentukan era dan identitas dasar shinobi-mu.
               </p>
             </>
           )}
@@ -653,11 +859,23 @@ export default function GeneratorPage() {
           </p>
           <div className="catalog-grid">
             <span>100 title awal</span>
+            <span>{eligible(eras, mode).length} era</span>
+            <span>{eligible(alignments, mode).length} pengaturan</span>
+            <span>{eligible(villages, mode).length} desa</span>
             <span>{eligible(clans, mode).length} klan</span>
             <span>{eligible(heritageStatuses, mode).length} status warisan</span>
             <span>{eligible(bloodlineTraits, mode).length} sifat darah</span>
+            <span>{eligible(dojutsu, mode).length} dojutsu</span>
+            <span>{eligible(chakraNatures, mode).length} elemen chakra</span>
+            <span>{eligible(affiliations, mode).length} afiliasi</span>
             <span>{eligible(ranks, mode).length} ranga</span>
             <span>{eligible(fightingStyles, mode).length} gaya</span>
+            <span>{eligible(summonings, mode).length} perintah hewan</span>
+            <span>{eligible(personalities, mode).length} kepribadian</span>
+            <span>{eligible(weaknesses, mode).length} kelemahan</span>
+            <span>{eligible(fates, mode).length} takdir</span>
+            <span>{eligible(titles, mode).length} gelar</span>
+            <span>{eligible(reputations, mode).length} reputasi</span>
           </div>
         </details>
       </div>

@@ -177,6 +177,7 @@ function toSpinResult(opt: SpinOption): SpinResult {
     rarity: opt.rarity,
     sourceStatus: opt.sourceStatus,
     explanation: opt.description,
+    buffs: opt.buffs,
   };
 }
 
@@ -277,6 +278,17 @@ function generateDojutsu(
   return { eye, stage, mastery, staminaCost, limitations, sourceStatus: eye.sourceStatus };
 }
 
+const BASIC_NATURE_IDS = ['fire', 'wind', 'lightning', 'earth', 'water'];
+
+const COMBINED_NATURES: Record<string, { requiredClan?: string; requiredNatures: string[]; optionId: string }> = {
+  wood: { requiredClan: 'senju', requiredNatures: ['earth', 'water'], optionId: 'wood' },
+  ice: { requiredClan: 'yuki', requiredNatures: ['water', 'wind'], optionId: 'ice' },
+};
+
+function isBasicNature(opt: SpinOption): boolean {
+  return BASIC_NATURE_IDS.includes(opt.id);
+}
+
 function generateChakra(
   natures: SpinOption[],
   rng: SeededRandom,
@@ -285,12 +297,67 @@ function generateChakra(
   mode: GameMode,
   preferredId?: string
 ): ChakraData {
-  const primary = toSpinResult(pickOption(natures, rng, preferredId, undefined, undefined, mode));
-  const secondary = rng.next() < 0.3 ? toSpinResult(pickOption(natures, rng)) : null;
+  const basicNatures = natures.filter(isBasicNature);
+  const primaryOpt = pickOption(natures, rng, preferredId, undefined, undefined, mode);
+  const primary = toSpinResult(primaryOpt);
+
+  // Nature count: 1-5, weighted toward lower counts (rarer to possess many elements).
+  const countWeights = [45, 25, 15, 10, 5];
+  let natureCount = 1;
+  let cumulative = 0;
+  const roll = rng.next() * 100;
+  for (let i = 0; i < countWeights.length; i += 1) {
+    cumulative += countWeights[i];
+    if (roll < cumulative) {
+      natureCount = i + 1;
+      break;
+    }
+  }
+
+  // Pool of basic natures excluding the primary (no duplicates).
+  const remainingBasic = basicNatures.filter((n) => n.id !== primaryOpt.id);
+
+  let secondary: SpinResult | null = null;
+  const additional: SpinResult[] = [];
+
+  if (natureCount >= 2 && remainingBasic.length > 0) {
+    const secondaryOpt = pickOption(remainingBasic, rng);
+    secondary = toSpinResult(secondaryOpt);
+    const afterSecondary = remainingBasic.filter((n) => n.id !== secondaryOpt.id);
+    if (natureCount > 2 && afterSecondary.length > 0) {
+      const toPick = Math.min(natureCount - 2, afterSecondary.length);
+      const shuffled = rng.shuffle([...afterSecondary]);
+      for (let i = 0; i < toPick; i += 1) {
+        additional.push(toSpinResult(shuffled[i]));
+      }
+    }
+  }
+
+  // Validate combined transformations against possessed natures + clan eligibility.
+  const natureIds = new Set([
+    primaryOpt.id,
+    ...(secondary ? [secondary.optionId] : []),
+    ...additional.map((a) => a.optionId),
+  ]);
+  let combined: SpinResult | null = null;
+  for (const def of Object.values(COMBINED_NATURES)) {
+    const hasAllNatures = def.requiredNatures.every((nid) => natureIds.has(nid));
+    const hasClan = !def.requiredClan || clan.optionId === def.requiredClan;
+    if (hasAllNatures && hasClan) {
+      const combinedOpt = natures.find((n) => n.id === def.optionId);
+      if (combinedOpt) {
+        combined = toSpinResult(combinedOpt);
+        break;
+      }
+    }
+  }
+
   return {
+    natureCount,
     primary,
     secondary,
-    combined: null,
+    additional,
+    combined,
     control: rng.nextInt(40) + 40,
     reserves: rng.nextInt(50) + 30,
   };

@@ -122,6 +122,9 @@ export default function CharacterPage() {
             <div><strong>Klan:</strong> {character.clan.label}</div>
             <div><strong>Status warisan:</strong> {character.heritage.status.label} ({character.heritage.confidence})</div>
             <div><strong>Sifat darah:</strong> {character.bloodline.trait.label} ({character.bloodline.state})</div>
+            {character.clan.buffs && character.clan.buffs.length > 0 && (
+              <div><strong>Buff klan:</strong> {character.clan.buffs.join(' · ')}</div>
+            )}
           </div>
         </div>
 
@@ -132,6 +135,8 @@ export default function CharacterPage() {
             <div>
               <strong>Chakra:</strong> {character.chakra.primary.label}
               {character.chakra.secondary ? ` + ${character.chakra.secondary.label}` : ''}
+              {character.chakra.additional.length > 0 ? ` · +${character.chakra.additional.length}` : ''}
+              {character.chakra.combined ? ` · Gabungan: ${character.chakra.combined.label}` : ''}
             </div>
             <div><strong>Gaya:</strong> {character.fightingStyle.primary.label}</div>
             <div><strong>Summoning:</strong> {character.summoning.contract.label} ({character.summoning.proficiency})</div>

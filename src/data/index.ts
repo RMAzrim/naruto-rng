@@ -1,4 +1,4 @@
-import type { SpinOption } from '@/types';
+import type { ConditionalSpinDefinition, SpinOption } from '@/types';
 
 import erasRaw from './eras.json';
 import titlesRaw from './titles.json';
@@ -8,6 +8,7 @@ import clansRaw from './clans.json';
 import heritageRaw from './heritage-statuses.json';
 import bloodlineRaw from './bloodline-traits.json';
 import dojutsuRaw from './dojutsu.json';
+import conditionalSpinsRaw from './conditional-spins.json';
 import chakraRaw from './chakra-natures.json';
 import fightingStylesRaw from './fighting-styles.json';
 import personalitiesRaw from './personalities.json';
@@ -47,6 +48,7 @@ export const clans: SpinOption[] = clansRaw.map((r) => toSpinOption(r));
 export const heritageStatuses: SpinOption[] = heritageRaw.map((r) => toSpinOption(r));
 export const bloodlineTraits: SpinOption[] = bloodlineRaw.map((r) => toSpinOption(r));
 export const dojutsu: SpinOption[] = dojutsuRaw.map((r) => toSpinOption(r));
+export const conditionalSpins: ConditionalSpinDefinition[] = conditionalSpinsRaw as unknown as ConditionalSpinDefinition[];
 export const chakraNatures: SpinOption[] = chakraRaw.map((r) => toSpinOption(r));
 export const fightingStyles: SpinOption[] = fightingStylesRaw.map((r) => toSpinOption(r));
 export const personalities: SpinOption[] = personalitiesRaw.map((r) => toSpinOption(r));

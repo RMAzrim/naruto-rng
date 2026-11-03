@@ -19,6 +19,8 @@ export type SpinOption = {
   narrativeEffect?: string;
   /** Rank metadata used by the combat rating pipeline. */
   combatTier?: number;
+  /** Clan-specific affinities/buffs (only meaningful for clan entries). */
+  buffs?: string[];
 };
 
 export type SpinDefinition = {
@@ -37,6 +39,7 @@ export type SpinResult = {
   rarity: Rarity;
   sourceStatus: SourceStatus;
   explanation?: string;
+  buffs?: string[];
 };
 
 export type OriginData = {
@@ -69,8 +72,10 @@ export type DojutsuData = {
 };
 
 export type ChakraData = {
+  natureCount: number; // 1-5 basic elemental natures possessed
   primary: SpinResult;
   secondary: SpinResult | null;
+  additional: SpinResult[]; // extra basic natures beyond primary/secondary
   combined: SpinResult | null;
   control: number; // 0-100
   reserves: number; // 0-100
@@ -254,4 +259,34 @@ export type CompatibilityRule = {
 export type SeedSource = {
   seed: string;
   dataVersion: string;
+};
+
+export type ConditionalSpinState = 'locked' | 'available' | 'completed' | 'failed';
+
+export type ConditionalSpinPrerequisite = {
+  spinId: string;
+  optionId: string;
+  message?: string;
+};
+
+export type ConditionalSpinDefinition = {
+  id: string;
+  name: string;
+  description: string;
+  prerequisites: ConditionalSpinPrerequisite[];
+  eligibilityConditions?: CompatibilityRule[];
+  resultPool: string[];
+  probabilityModifiers?: Record<string, number>;
+  failureOutcome?: string;
+  nextUnlockedSpin?: string | null;
+  acquisitionMethod: 'inheritance' | 'transplantation' | 'training' | 'awakening' | 'natural';
+  explanation: string;
+};
+
+export type ConditionalSpinResult = {
+  spinId: string;
+  optionId: string;
+  label: string;
+  state: ConditionalSpinState;
+  unlockedBy?: string[];
 };

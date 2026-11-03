@@ -1,0 +1,164 @@
+[
+  {
+    "id": "sharingan-eligibility",
+    "name": "Sharingan Eligibility",
+    "description": "Apakah karakter memenuhi syarat untuk mewarnai Sharingan?",
+    "prerequisites": [
+      { "spinId": "clan", "optionId": "uchiha", "message": "Diperlukan keturunan Uchiha." }
+    ],
+    "resultPool": ["sharingan-eligible", "sharingan-ineligible"],
+    "probabilityModifiers": {
+      "sharingan-eligible": 5,
+      "sharingan-ineligible": 95
+    },
+    "failureOutcome": "Klan bukan Uchiha — Sharingan tidak dapat diwariskan secara alami.",
+    "nextUnlockedSpin": "sharingan-type",
+    "acquisitionMethod": "inheritance",
+    "explanation": "Keturunan Uchiha meningkatkan peluang Sharingan, tetapi tidak menjaminnya."
+  },
+  {
+    "id": "sharingan-type",
+    "name": "Sharingan Type",
+    "description": "Tingkat tomoe Sharingan yang diuciskan.",
+    "prerequisites": [
+      { "spinId": "sharingan-eligibility", "optionId": "sharingan-eligible", "message": "Diperlukan kelayakan Sharingan." },
+      { "spinId": "dojutsu", "optionId": "sharingan", "message": "Diperlukan dojutsu Sharingan." }
+    ],
+    "resultPool": ["sharingan-1-tomoe", "sharingan-2-tomoe", "sharingan-3-tomoe"],
+    "probabilityModifiers": {
+      "sharingan-1-tomoe": 50,
+      "sharingan-2-tomoe": 30,
+      "sharingan-3-tomoe": 20
+    },
+    "failureOutcome": "Tidak dapat menentukan tingkat Sharingan tanpa kelayakan dan dojutsu yang valid.",
+    "nextUnlockedSpin": "mangekyo-eligibility",
+    "acquisitionMethod": "awakening",
+    "explanation": "Tingkat Sharingan bervariasi dari satu sampai tiga tomoe."
+  },
+  {
+    "id": "mangekyo-eligibility",
+    "name": "Mangekyō Eligibility",
+    "description": "Apakah karakter dapat menguciskan Mangekyō Sharingan?",
+    "prerequisites": [
+      { "spinId": "sharingan-type", "optionId": "sharingan-3-tomoe", "message": "Diperlukan Sharingan 3 tomoe." }
+    ],
+    "resultPool": ["mangekyo-eligible", "mangekyo-ineligible"],
+    "probabilityModifiers": {
+      "mangekyo-eligible": 10,
+      "mangekyo-ineligible": 90
+    },
+    "failureOutcome": "Mangekyō memerlukan trauma dan Sharingan 3 tomoe.",
+    "nextUnlockedSpin": "mangekyo-abilities",
+    "acquisitionMethod": "awakening",
+    "explanation": "Mangekyō Sharingan hanya diuciskan oleh sebagian kecil pemakai Sharingan."
+  },
+  {
+    "id": "mangekyo-abilities",
+    "name": "Mangekyō Abilities",
+    "description": "Kemampuan unik Mangekyō untuk mata kiri dan kanan.",
+    "prerequisites": [
+      { "spinId": "mangekyo-eligibility", "optionId": "mangekyo-eligible", "message": "Diperlukan kelayakan Mangekyō." }
+    ],
+    "resultPool": ["amaterasu", "tsukuyomi", "kamui", "kagutsuchi", "kotoamatsukami"],
+    "probabilityModifiers": {
+      "amaterasu": 25,
+      "tsukuyomi": 25,
+      "kamui": 20,
+      "kagutsuchi": 20,
+      "kotoamatsukami": 10
+    },
+    "failureOutcome": "Tanpa Mangekyō, tidak ada kemampuan mata tingkat lanjut.",
+    "nextUnlockedSpin": "ems-eligibility",
+    "acquisitionMethod": "awakening",
+    "explanation": "Setiap Mangekyō memiliki kemampuan unik yang berbeda pada mata kiri dan kanan."
+  },
+  {
+    "id": "ems-eligibility",
+    "name": "Eternal Mangekyō Eligibility",
+    "description": "Apakah karakter memenuhi syarat untuk EMS melalui transplantasi?",
+    "prerequisites": [
+      { "spinId": "mangekyo-eligibility", "optionId": "mangekyo-eligible", "message": "Diperlukan Mangekyō Sharingan." }
+    ],
+    "resultPool": ["ems-eligible", "ems-ineligible"],
+    "probabilityModifiers": {
+      "ems-eligible": 5,
+      "ems-ineligible": 95
+    },
+    "failureOutcome": "EMS memerlukan donor Mangekyō yang kompatibel dan transplantasi.",
+    "nextUnlockedSpin": "susanoo-eligibility",
+    "acquisitionMethod": "transplantation",
+    "explanation": "Eternal Mangekyō Sharingan menghindari kerusakan mata dari Mangekyō biasa."
+  },
+  {
+    "id": "susanoo-eligibility",
+    "name": "Susanoo Eligibility",
+    "description": "Apakah karakter dapat memanggil Susanoo?",
+    "prerequisites": [
+      { "spinId": "mangekyo-eligibility", "optionId": "mangekyo-eligible", "message": "Diperlukan Mangekyō Sharingan di kedua mata." }
+    ],
+    "resultPool": ["susanoo-eligible", "susanoo-ineligible"],
+    "probabilityModifiers": {
+      "susanoo-eligible": 15,
+      "susanoo-ineligible": 85
+    },
+    "failureOutcome": "Susanoo memerlukan Mangekyō di kedua mata dan cadangan chakra yang besar.",
+    "nextUnlockedSpin": "susanoo-stage",
+    "acquisitionMethod": "awakening",
+    "explanation": "Susanoo adalah avatara chakra yang bisa dipanggil oleh pemakai Mangekyō."
+  },
+  {
+    "id": "susanoo-stage",
+    "name": "Susanoo Stage",
+    "description": "Tingkat perkembangan Susanoo yang tercapai.",
+    "prerequisites": [
+      { "spinId": "susanoo-eligibility", "optionId": "susanoo-eligible", "message": "Diperlukan kelayakan Susanoo." }
+    ],
+    "resultPool": ["susanoo-ribcage", "susanoo-skeletal", "susanoo-humanoid", "susanoo-armored"],
+    "probabilityModifiers": {
+      "susanoo-ribcage": 40,
+      "susanoo-skeletal": 30,
+      "susanoo-humanoid": 20,
+      "susanoo-armored": 10
+    },
+    "failureOutcome": "Tanpa kelayakan Susanoo, tidak ada tingkat yang dapat dicapai.",
+    "nextUnlockedSpin": null,
+    "acquisitionMethod": "awakening",
+    "explanation": "Susanoo berkembang dari rusuk hingga bentuk utuh sesuai kemahiran pemakai."
+  },
+  {
+    "id": "byakugan-eligibility",
+    "name": "Byakugan Eligibility",
+    "description": "Apakah karakter memenuhi syarat untuk Byakugan?",
+    "prerequisites": [
+      { "spinId": "clan", "optionId": "hyuga", "message": "Diperlukan keturunan Hyūga." }
+    ],
+    "resultPool": ["byakugan-eligible", "byakugan-ineligible"],
+    "probabilityModifiers": {
+      "byakugan-eligible": 8,
+      "byakugan-ineligible": 92
+    },
+    "failureOutcome": "Byakugan adalah ciri khas klan Hyūga.",
+    "nextUnlockedSpin": null,
+    "acquisitionMethod": "inheritance",
+    "explanation": "Byakugan memberikan penglihatan hampir 360 derajat dan penglihatan jaringan chakra."
+  },
+  {
+    "id": "wood-release-eligibility",
+    "name": "Wood Release Eligibility",
+    "description": "Apakah karakter dapat menggunakan Mokuton (Wood Release)?",
+    "prerequisites": [
+      { "spinId": "clan", "optionId": "senju", "message": "Diperlukan keturunan Senju." },
+      { "spinId": "chakra", "optionId": "earth", "message": "Diperlukan elemen Earth Release." },
+      { "spinId": "chakra", "optionId": "water", "message": "Diperlukan elemen Water Release." }
+    ],
+    "resultPool": ["wood-release-eligible", "wood-release-ineligible"],
+    "probabilityModifiers": {
+      "wood-release-eligible": 3,
+      "wood-release-ineligible": 97
+    },
+    "failureOutcome": "Mokuton memerlukan garis keturunan Senju dan elemen Earth + Water.",
+    "nextUnlockedSpin": null,
+    "acquisitionMethod": "inheritance",
+    "explanation": "Wood Release adalah trasformasi gabungan yang langka milik garis keturunan Senju."
+  }
+]

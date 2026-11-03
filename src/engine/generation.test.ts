@@ -84,4 +84,89 @@ describe('generateCharacter', () => {
     expect(char.rank.combatTier).toBe(5);
     expect(char.fightingStyle.primary.optionId).toBe('ninjutsu');
   });
+
+  it('chakra nature count is between 1 and 5', () => {
+    for (let i = 0; i < 50; i += 1) {
+      const char = generateCharacter({ ...baseSettings, seed: `count-test-${i}` }, dataContext);
+      expect(char.chakra.natureCount).toBeGreaterThanOrEqual(1);
+      expect(char.chakra.natureCount).toBeLessThanOrEqual(5);
+    }
+  });
+
+  it('nature count equals number of basic natures possessed', () => {
+    for (let i = 0; i < 50; i += 1) {
+      const char = generateCharacter({ ...baseSettings, seed: `count-eq-${i}` }, dataContext);
+      const possessed = [char.chakra.primary]
+        .filter(Boolean)
+        .concat(char.chakra.secondary ? [char.chakra.secondary] : [])
+        .concat(char.chakra.additional)
+        .map((n) => n.optionId);
+      const unique = new Set(possessed);
+      expect(char.chakra.natureCount).toBe(unique.size);
+      expect(unique.size).toBe(possessed.length); // no duplicates
+    }
+  });
+
+  it('primary chakra nature always exists', () => {
+    const char = generateCharacter(baseSettings, dataContext);
+    expect(char.chakra.primary.label).toBeDefined();
+    expect(['fire', 'wind', 'lightning', 'earth', 'water']).toContain(char.chakra.primary.optionId);
+  });
+
+  it('secondary only present when count >= 2', () => {
+    let foundCount1 = false;
+    let foundCount2Plus = false;
+    for (let i = 0; i < 100 && (!(foundCount1 && foundCount2Plus)); i += 1) {
+      const char = generateCharacter({ ...baseSettings, seed: `sec-test-${i}` }, dataContext);
+      if (char.chakra.natureCount === 1) {
+        foundCount1 = true;
+        expect(char.chakra.secondary).toBeNull();
+        expect(char.chakra.additional).toHaveLength(0);
+      }
+      if (char.chakra.natureCount >= 2) {
+        foundCount2Plus = true;
+        expect(char.chakra.secondary).not.toBeNull();
+      }
+    }
+    expect(foundCount1).toBe(true);
+    expect(foundCount2Plus).toBe(true);
+  });
+
+  it('combined nature wood requires senju clan + earth + water', () => {
+    const char = generateCharacter(
+      {
+        ...baseSettings,
+        seed: 'wood-test',
+        clanId: 'senju',
+        chakraId: 'earth',
+      },
+      dataContext
+    );
+    // With Senju + Earth primary, the roll may or may not produce Water as secondary/additional.
+    // If wood combined appears, validate prerequisites are met.
+    if (char.chakra.combined?.optionId === 'wood') {
+      expect(char.clan.optionId).toBe('senju');
+      const natures = [char.chakra.primary.optionId, ...(char.chakra.secondary ? [char.chakra.secondary.optionId] : []), ...char.chakra.additional.map((n) => n.optionId)];
+      expect(natures).toContain('earth');
+      expect(natures).toContain('water');
+    }
+  });
+
+  it('combined nature ice requires yuki clan + water + wind', () => {
+    const char = generateCharacter(
+      {
+        ...baseSettings,
+        seed: 'ice-test',
+        clanId: 'yuki',
+        chakraId: 'water',
+      },
+      dataContext
+    );
+    if (char.chakra.combined?.optionId === 'ice') {
+      expect(char.clan.optionId).toBe('yuki');
+      const natures = [char.chakra.primary.optionId, ...(char.chakra.secondary ? [char.chakra.secondary.optionId] : []), ...char.chakra.additional.map((n) => n.optionId)];
+      expect(natures).toContain('water');
+      expect(natures).toContain('wind');
+    }
+  });
 });

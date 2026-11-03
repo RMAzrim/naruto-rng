@@ -130,4 +130,72 @@ describe('spinConditionalSpin', () => {
     expect('error' in result).toBe(true);
     if ('error' in result) expect(result.error).toContain('tidak dapat');
   });
+
+  it('locks Byakugan Mastery for non-Hyuga', () => {
+    const char = makeCharacter({ clan: { spinId: 'clan', optionId: 'clanless', label: 'Clanless', rarity: 'Common', sourceStatus: 'game-original' } });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const byakugan = results.find((r) => r.spinId === 'byakugan-mastery');
+    expect(byakugan?.state).toBe('locked');
+  });
+
+  it('makes Byakugan Mastery available for Hyuga with Byakugan dojutsu', () => {
+    const char = makeCharacter({
+      clan: { spinId: 'clan', optionId: 'hyuga', label: 'Hyuga', rarity: 'Uncommon', sourceStatus: 'canon' },
+      dojutsu: { eye: { spinId: 'dojutsu', optionId: 'byakugan', label: 'Byakugan', rarity: 'Uncommon', sourceStatus: 'canon' }, stage: 'Basic', mastery: 'basic', staminaCost: 10, limitations: [], sourceStatus: 'canon' },
+    });
+    char.history.push({ action: 'generate', field: 'byakugan-eligibility', previous: '', current: 'byakugan-eligible', at: '2024-01-01T00:00:00.000Z' });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const mastery = results.find((r) => r.spinId === 'byakugan-mastery');
+    expect(mastery?.state).toBe('available');
+  });
+
+  it('locks Tenseigan Eligibility for non-Otsutsuki', () => {
+    const char = makeCharacter({ clan: { spinId: 'clan', optionId: 'clanless', label: 'Clanless', rarity: 'Common', sourceStatus: 'game-original' } });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const tenseigan = results.find((r) => r.spinId === 'tenseigan-eligibility');
+    expect(tenseigan?.state).toBe('locked');
+  });
+
+  it('makes Tenseigan Eligibility available for Otsutsuki with Ancient/Mythic heritage', () => {
+    const char = makeCharacter({
+      clan: { spinId: 'clan', optionId: 'otsutsuki', label: 'Ōtsutsuki', rarity: 'Mythic', sourceStatus: 'canon' },
+      heritage: { status: { spinId: 'heritage', optionId: 'ancient-mythic', label: 'Ancient / Mythic Ancestry', rarity: 'Mythic', sourceStatus: 'game-original' }, confidence: 'confirmed', ancestryIds: ['otsutsuki'], notes: 'Ancient lineage' },
+    });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const eligibility = results.find((r) => r.spinId === 'tenseigan-eligibility');
+    expect(eligibility?.state).toBe('available');
+  });
+
+  it('locks Rinnegan Eligibility for non-Otsutsuki', () => {
+    const char = makeCharacter({ clan: { spinId: 'clan', optionId: 'clanless', label: 'Clanless', rarity: 'Common', sourceStatus: 'game-original' } });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const rinnegan = results.find((r) => r.spinId === 'rinnegan-eligibility');
+    expect(rinnegan?.state).toBe('locked');
+  });
+
+  it('makes Rinnegan Eligibility available for Otsutsuki with Ancient/Mythic heritage', () => {
+    const char = makeCharacter({
+      clan: { spinId: 'clan', optionId: 'otsutsuki', label: 'Ōtsutsuki', rarity: 'Mythic', sourceStatus: 'canon' },
+      heritage: { status: { spinId: 'heritage', optionId: 'ancient-mythic', label: 'Ancient / Mythic Ancestry', rarity: 'Mythic', sourceStatus: 'game-original' }, confidence: 'confirmed', ancestryIds: ['otsutsuki'], notes: 'Ancient lineage' },
+    });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const eligibility = results.find((r) => r.spinId === 'rinnegan-eligibility');
+    expect(eligibility?.state).toBe('available');
+  });
+
+  it('picks a Rinnegan Path from pool', () => {
+    const def = conditionalSpins.find((d) => d.id === 'rinnegan-path');
+    expect(def).toBeDefined();
+    if (!def) return;
+    const char = makeCharacter({
+      clan: { spinId: 'clan', optionId: 'otsutsuki', label: 'Ōtsutsuki', rarity: 'Mythic', sourceStatus: 'canon' },
+      dojutsu: { eye: { spinId: 'dojutsu', optionId: 'rinnegan', label: 'Rinnegan', rarity: 'Mythic', sourceStatus: 'canon' }, stage: 'Basic', mastery: 'basic', staminaCost: 30, limitations: [], sourceStatus: 'canon' },
+    });
+    char.history.push({ action: 'generate', field: 'rinnegan-eligibility', previous: '', current: 'rinnegan-eligible', at: '2024-01-01T00:00:00.000Z' });
+    const rng = new SeededRandom('rinnegan-test');
+    const pool = def.resultPool.map((id) => ({ id, label: id, rarity: 'Rare' as const, weight: 1, sourceStatus: 'canon' as const }));
+    const result = spinConditionalSpin(def, char, rng, pool);
+    if ('error' in result) throw new Error(result.error);
+    expect(def.resultPool).toContain(result.option.id);
+  });
 });

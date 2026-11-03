@@ -160,5 +160,99 @@
     "nextUnlockedSpin": null,
     "acquisitionMethod": "inheritance",
     "explanation": "Wood Release adalah trasformasi gabungan yang langka milik garis keturunan Senju."
+  },
+  {
+    "id": "byakugan-mastery",
+    "name": "Byakugan Mastery",
+    "description": "Tingkat penguasaan Byakugan yang dicapai.",
+    "prerequisites": [
+      { "spinId": "byakugan-eligibility", "optionId": "byakugan-eligible", "message": "Diperlukan kelayakan Byakugan." },
+      { "spinId": "dojutsu", "optionId": "byakugan", "message": "Diperlukan dojutsu Byakugan." }
+    ],
+    "resultPool": ["byakugan-basic", "byakugan-advanced", "byakugan-transcendent"],
+    "probabilityModifiers": {
+      "byakugan-basic": 50,
+      "byakugan-advanced": 30,
+      "byakugan-transcendent": 20
+    },
+    "failureOutcome": "Tidak dapat menentukan tingkat Byakugan tanpa kelayakan dan dojutsu yang valid.",
+    "nextUnlockedSpin": null,
+    "acquisitionMethod": "awakening",
+    "explanation": "Byakugan berkembang dari penglihatan dasar hingga awareness transcenden."
+  },
+  {
+    "id": "tenseigan-eligibility",
+    "name": "Tenseigan Eligibility",
+    "description": "Apakah karakter memenuhi syarat untuk Tenseigan?",
+    "prerequisites": [
+      { "spinId": "clan", "optionId": "otsutsuki", "message": "Diperlukan keturunan Ōtsutsuki." },
+      { "spinId": "heritage", "optionId": "ancient-mythic", "message": "Diperlukan heritage Ancient/Mythic Ancestry." }
+    ],
+    "resultPool": ["tenseigan-eligible", "tenseigan-ineligible"],
+    "probabilityModifiers": {
+      "tenseigan-eligible": 3,
+      "tenseigan-ineligible": 97
+    },
+    "failureOutcome": "Tenseigan memerlukan garis keturunan Ōtsutsuki/Hamura dan heritage Ancient/Mythic.",
+    "nextUnlockedSpin": "tenseigan-mastery",
+    "acquisitionMethod": "inheritance",
+    "explanation": "Tenseigan adalah dōjutsu legendaris milik garis keturunan Ōtsutsuki/Hamura."
+  },
+  {
+    "id": "tenseigan-mastery",
+    "name": "Tenseigan Mastery",
+    "description": "Tingkat penguasaan Tenseigan yang dicapai.",
+    "prerequisites": [
+      { "spinId": "tenseigan-eligibility", "optionId": "tenseigan-eligible", "message": "Diperlukan kelayakan Tenseigan." },
+      { "spinId": "dojutsu", "optionId": "tenseigan", "message": "Diperlukan dojutsu Tenseigan." }
+    ],
+    "resultPool": ["tenseigan-basic", "tenseigan-advanced"],
+    "probabilityModifiers": {
+      "tenseigan-basic": 70,
+      "tenseigan-advanced": 30
+    },
+    "failureOutcome": "Tanpa Tenseigan yang valid, tidak ada tingkat yang dapat dicapai.",
+    "nextUnlockedSpin": null,
+    "acquisitionMethod": "awakening",
+    "explanation": "Tenseigan berkembang dari penglihatan chakra hingga gudodama dan chakra mode."
+  },
+  {
+    "id": "rinnegan-eligibility",
+    "name": "Rinnegan Eligibility",
+    "description": "Apakah karakter memenuhi syarat untuk Rinnegan?",
+    "prerequisites": [
+      { "spinId": "clan", "optionId": "otsutsuki", "message": "Diperlukan keturunan Ōtsutsuki." },
+      { "spinId": "heritage", "optionId": "ancient-mythic", "message": "Diperlukan heritage Ancient/Mythic Ancestry." }
+    ],
+    "resultPool": ["rinnegan-eligible", "rinnegan-ineligible"],
+    "probabilityModifiers": {
+      "rinnegan-eligible": 2,
+      "rinnegan-ineligible": 98
+    },
+    "failureOutcome": "Rinnegan memerlukan garis keturunan Ōtsutsuki dan heritage Ancient/Mythic.",
+    "nextUnlockedSpin": "rinnegan-path",
+    "acquisitionMethod": "inheritance",
+    "explanation": "Rinnegan adalah dōjutsu legendaris Sage of Six Paths; ekstrem langka."
+  },
+  {
+    "id": "rinnegan-path",
+    "name": "Rinnegan Path",
+    "description": "Jalur Rikudō yang dipilih oleh pemakai Rinnegan.",
+    "prerequisites": [
+      { "spinId": "rinnegan-eligibility", "optionId": "rinnegan-eligible", "message": "Diperlukan kelayakan Rinnegan." },
+      { "spinId": "dojutsu", "optionId": "rinnegan", "message": "Diperlukan dojutsu Rinnegan." }
+    ],
+    "resultPool": ["rinnegan-deva", "rinnegan-asura", "rinnegan-human", "rinnegan-animal", "rinnegan-preta"],
+    "probabilityModifiers": {
+      "rinnegan-deva": 30,
+      "rinnegan-asura": 25,
+      "rinnegan-human": 20,
+      "rinnegan-animal": 15,
+      "rinnegan-preta": 10
+    },
+    "failureOutcome": "Tanpa Rinnegan yang valid, tidak ada jalur yang dapat dipilih.",
+    "nextUnlockedSpin": null,
+    "acquisitionMethod": "awakening",
+    "explanation": "Rinnegan memiliki enam jalur (Path); masing-masing memberikan kemampuan berbeda."
   }
 ]

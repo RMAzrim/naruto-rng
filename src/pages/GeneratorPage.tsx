@@ -1,209 +1,666 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SpinCard } from '@/components/SpinCard';
-import { useGeneration } from '@/hooks/useGeneration';
+import { Wheel } from '@/components/Wheel';
+import { generateCharacter } from '@/engine/generation';
+import { dataContext } from '@/hooks/useGeneration';
+import { SeededRandom, weightedSelect } from '@/engine/rng';
+import { loadCollection, saveCharacter } from '@/engine/persistence';
+import { useTheme, type DataMode } from '@/theme/ThemeContext';
 import {
-  eras, alignments, titles, villages, clans, heritageStatuses,
-  bloodlineTraits, dojutsu, chakraNatures, affiliations, fightingStyles,
-  summonings, ranks, personalities, weaknesses, fates, reputations,
+  bloodlineTraits,
+  clans,
+  fightingStyles,
+  heritageStatuses,
+  ranks,
 } from '@/data/index';
+import type { Character, SpinOption } from '@/types';
 
-type SpinKey =
-  | 'era' | 'alignment' | 'title' | 'clan' | 'heritage' | 'bloodline'
-  | 'dojutsu' | 'chakra' | 'fightingStyle' | 'summoning' | 'rank'
-  | 'personality' | 'weakness' | 'fate' | 'reputation';
+type StageKey = 'name' | 'clan' | 'heritage' | 'bloodline' | 'rank' | 'style' | 'result';
+type SpinStageKey = Exclude<StageKey, 'name' | 'result'>;
 
-interface SpinSectionProps {
+type StageMeta = {
+  eyebrow: string;
   title: string;
-  keys: SpinKey[];
-  character: any;
-  spinningKey: SpinKey | null;
-  handleSpin: (key: SpinKey) => void;
-  loading: boolean;
-  resultFor: (key: SpinKey) => any;
-}
-
-const SPINS: Record<SpinKey, { id: string; name: string; description: string; options: any[] }> = {
-  era: { id: 'era', name: 'Era', description: 'The historical period of the shinobi world.', options: eras },
-  alignment: { id: 'alignment', name: 'Alignment', description: 'Moral compass and core motivation.', options: alignments },
-  title: { id: 'title', name: 'Title', description: 'Epithet or title earned by the shinobi.', options: titles },
-  clan: { id: 'clan', name: 'Clan', description: 'Bloodline or clan lineage.', options: clans },
-  heritage: { id: 'heritage', name: 'Heritage Status', description: 'Ancestry and inherited legacy.', options: heritageStatuses },
-  bloodline: { id: 'bloodline', name: 'Bloodline Trait', description: 'Inherited ability, if any.', options: bloodlineTraits },
-  dojutsu: { id: 'dojutsu', name: 'Dojutsu', description: 'Inherited eye ability.', options: dojutsu },
-  chakra: { id: 'chakra', name: 'Chakra Nature', description: 'Primary elemental affinity.', options: chakraNatures },
-  fightingStyle: { id: 'fightingStyle', name: 'Fighting Style', description: 'Primary combat discipline.', options: fightingStyles },
-  summoning: { id: 'summoning', name: 'Summoning', description: 'Animal contract, if any.', options: summonings },
-  rank: { id: 'rank', name: 'Rank / Tier', description: 'Shinobi rank and combat tier.', options: ranks },
-  personality: { id: 'personality', name: 'Personality', description: 'Multi-dimensional personality profile.', options: personalities },
-  weakness: { id: 'weakness', name: 'Weakness', description: 'Meaningful limitation for counterplay.', options: weaknesses },
-  fate: { id: 'fate', name: 'Fate', description: 'Narrative hook or destiny.', options: fates },
-  reputation: { id: 'reputation', name: 'Reputation', description: 'How others perceive the shinobi.', options: reputations },
+  category: string;
+  prompt: string;
+  hint: string;
+  noun: string;
+  options: SpinOption[];
 };
 
-const SECTIONS: { title: string; keys: SpinKey[] }[] = [
-  { title: 'Identity & Timeline', keys: ['era', 'alignment', 'title'] },
-  { title: 'Origin & Heritage', keys: ['clan', 'heritage', 'bloodline'] },
-  { title: 'Powers & Abilities', keys: ['dojutsu', 'chakra', 'summoning'] },
-  { title: 'Combat Profile', keys: ['fightingStyle', 'rank'] },
-  { title: 'Personality & Weakness', keys: ['personality', 'weakness', 'fate'] },
+const STAGE_ORDER: StageKey[] = ['name', 'clan', 'heritage', 'bloodline', 'rank', 'style', 'result'];
+
+const STAGES: Record<SpinStageKey, StageMeta> = {
+  clan: {
+    eyebrow: 'Tahap 02 · Klan',
+    title: 'Klan',
+    category: 'Klan',
+    prompt: 'Klan apa yang mengalir di darahmu?',
+    hint: 'Klan menentukan predileksi awal. Irisan yang lebih lebar punya peluang lebih besar untuk keluar.',
+    noun: 'klan',
+    options: clans,
+  },
+  heritage: {
+    eyebrow: 'Tahap 03 · Warisan · 1/2',
+    title: 'Status warisan',
+    category: 'Status warisan',
+    prompt: 'Bagaimana garis keturunanmu?',
+    hint: 'Status warisan memengaruhi kepercayaan dunia terhadap darah dan masa lalu klanmu.',
+    noun: 'status warisan',
+    options: heritageStatuses,
+  },
+  bloodline: {
+    eyebrow: 'Tahap 03 · Warisan · 2/2',
+    title: 'Sifat darah',
+    category: 'Sifat darah',
+    prompt: 'Sifat apa yang diwariskan darahmu?',
+    hint: 'Tidak semua shinobi mewarisi kekuatan khusus. Kebanyakan justru tidak punya kemampuan bawaan.',
+    noun: 'sifat darah',
+    options: bloodlineTraits,
+  },
+  rank: {
+    eyebrow: 'Tahap 04 · Ranga & gaya · 1/2',
+    title: 'Ranga',
+    category: 'Ranga',
+    prompt: 'Sejauh mana reputasi militermu?',
+    hint: 'Ranga menentukan kedudukan awal, bukan batas akhir kekuatan.',
+    noun: 'ranga',
+    options: ranks,
+  },
+  style: {
+    eyebrow: 'Tahap 04 · Ranga & gaya · 2/2',
+    title: 'Gaya bertarung',
+    category: 'Gaya bertarung',
+    prompt: 'Bagaimana kamu menghadapi lawan?',
+    hint: 'Gaya bertarung memberi arah statistik dan menentukan teknik dasar yang kamu bawa.',
+    noun: 'gaya',
+    options: fightingStyles,
+  },
+};
+
+const GROUPS: { id: string; label: string; keys: StageKey[] }[] = [
+  { id: 'name', label: 'Nama', keys: ['name'] },
+  { id: 'clan', label: 'Klan', keys: ['clan'] },
+  { id: 'heritage', label: 'Warisan', keys: ['heritage', 'bloodline'] },
+  { id: 'rank', label: 'Ranga', keys: ['rank', 'style'] },
+  { id: 'result', label: 'Hasil', keys: ['result'] },
 ];
 
-function SpinSection({ title, keys, character, spinningKey, handleSpin, loading, resultFor }: SpinSectionProps) {
-  return (
-    <div style={{ marginBottom: '1.2rem' }}>
-      <h3 style={{ fontSize: '1rem', marginBottom: '0.6rem', color: '#38bdf8' }}>{title}</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
-        {keys.map((key) => {
-          const spin = SPINS[key];
-          const result = resultFor(key);
-          const spinning = spinningKey === key;
-          return (
-            <SpinCard
-              key={key}
-              spin={{ id: spin.id, name: spin.name, description: spin.description }}
-              result={result}
-              options={spin.options}
-              onSpin={() => handleSpin(key)}
-              spinning={spinning}
-              disabled={loading}
-              reducedMotion
-            />
-          );
-        })}
-      </div>
-    </div>
+const FIRST_NAMES = ['Hikari', 'Ren', 'Sora', 'Kaito', 'Emi', 'Daiki', 'Mei', 'Ryo', 'Yua', 'Jin', 'Akira', 'Haru', 'Nao', 'Shin', 'Yuki', 'Kaede', 'Tsubaki', 'Itsuki'];
+const LAST_NAMES = ['Kazane', 'Shirogane', 'Amagiri', 'Tsukimori', 'Kurogane', 'Hoshizora', 'Mizukawa', 'Tachibana', 'Fuyuki', 'Kagerou', 'Sakimori', 'Amane'];
+
+const STAT_LABELS: [keyof Character['stats'], string][] = [
+  ['ninjutsu', 'Ninjutsu'],
+  ['taijutsu', 'Taijutsu'],
+  ['genjutsu', 'Genjutsu'],
+  ['chakraControl', 'Kontrol'],
+  ['chakraReserves', 'Cadangan'],
+  ['speed', 'Kecepatan'],
+  ['strength', 'Kekuatan'],
+  ['intelligence', 'Intel'],
+];
+
+function eligible(options: SpinOption[], mode: DataMode): SpinOption[] {
+  return options.filter(
+    (option) => option.weight > 0 && (mode === 'au' || option.sourceStatus !== 'oc')
   );
+}
+
+function pickRandom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function powerClass(tier: number): string {
+  if (tier >= 5) return 'Kelas Kage';
+  if (tier >= 4) return 'Elit Jōnin';
+  if (tier >= 3) return 'Chūnin';
+  if (tier >= 2) return 'Genin';
+  if (tier >= 1) return 'Akademi';
+  return 'Sipil';
 }
 
 export default function GeneratorPage() {
   const navigate = useNavigate();
-  const { generate, reroll, character, loading, error } = useGeneration();
+  const { reducedMotion, mode } = useTheme();
+
+  const [stageKey, setStageKey] = useState<StageKey>('name');
   const [name, setName] = useState('');
-  const [nameSource, setNameSource] = useState<'manual' | 'generated'>('manual');
-  const [mode, setMode] = useState<'strict' | 'au'>('strict');
-  const [spinningKey, setSpinningKey] = useState<SpinKey | null>(null);
+  const [answers, setAnswers] = useState<Partial<Record<SpinStageKey, SpinOption>>>({});
+  const [pending, setPending] = useState<SpinOption | null>(null);
+  const [spinToken, setSpinToken] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<Character[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const modeRef = useRef(mode);
 
-  const handleGenerate = useCallback(() => {
-    generate({
-      mode,
-      name: name || undefined,
-      nameSource,
+  useEffect(() => {
+    if (modeRef.current === mode) return;
+    modeRef.current = mode;
+    setAnswers({});
+    setPending(null);
+    setSpinning(false);
+    setCharacter(null);
+    setSaved(false);
+    setError(null);
+    setStageKey((previous) => (previous === 'name' ? 'name' : 'clan'));
+  }, [mode]);
+
+  const refreshLeaderboard = useCallback(() => {
+    const sorted = [...loadCollection()]
+      .sort((a, b) => (b.combatRating?.score ?? 0) - (a.combatRating?.score ?? 0))
+      .slice(0, 12);
+    setLeaderboard(sorted);
+  }, []);
+
+  useEffect(() => {
+    refreshLeaderboard();
+  }, [refreshLeaderboard]);
+
+  const wheelOptions = useMemo(() => {
+    if (stageKey === 'clan') return eligible(STAGES.clan.options, mode);
+    if (stageKey === 'heritage') return eligible(STAGES.heritage.options, mode);
+    if (stageKey === 'bloodline') return eligible(STAGES.bloodline.options, mode);
+    if (stageKey === 'rank') return eligible(STAGES.rank.options, mode);
+    if (stageKey === 'style') return eligible(STAGES.style.options, mode);
+    return [];
+  }, [stageKey, mode]);
+
+  const displayOptions = useMemo(() => {
+    if (stageKey === 'name' || stageKey === 'result') return eligible(STAGES.clan.options, mode);
+    return wheelOptions;
+  }, [stageKey, wheelOptions, mode]);
+
+  const currentAnswer = stageKey !== 'name' && stageKey !== 'result' ? answers[stageKey] : undefined;
+  const currentStage = stageKey !== 'name' && stageKey !== 'result' ? STAGES[stageKey] : null;
+  const activeGroupIndex = GROUPS.findIndex((group) => group.keys.includes(stageKey));
+
+  const rolls = useMemo(() => {
+    const rows: { category: string; result: string }[] = [];
+    if (name.trim() && stageKey !== 'name') {
+      rows.push({ category: 'Nama', result: name.trim() });
+    }
+    (['clan', 'heritage', 'bloodline', 'rank', 'style'] as SpinStageKey[]).forEach((key) => {
+      const answer = answers[key];
+      if (answer) rows.push({ category: STAGES[key].category, result: answer.label });
     });
-  }, [generate, mode, name, nameSource]);
+    return rows;
+  }, [name, answers, stageKey]);
 
-  const handleSpin = useCallback((key: SpinKey) => {
-    setSpinningKey(key);
-    reroll({
-      mode,
-      name,
-      nameSource,
+  const commitName = useCallback(() => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setName(trimmed);
+    setStageKey('clan');
+  }, [name]);
+
+  const rollName = useCallback(() => {
+    setName(`${pickRandom(FIRST_NAMES)} ${pickRandom(LAST_NAMES)}`);
+  }, []);
+
+  const handleSpin = useCallback(() => {
+    if (spinning || stageKey === 'name' || stageKey === 'result') return;
+    if (answers[stageKey]) return;
+    if (wheelOptions.length === 0) return;
+
+    const rng = new SeededRandom(`wheel-${stageKey}-${Date.now()}-${Math.random()}`);
+    const picked = weightedSelect(
+      rng,
+      wheelOptions.map((option) => ({ item: option, weight: option.weight }))
+    ).item;
+
+    setPending(picked);
+    setSpinToken((token) => token + 1);
+    setSpinning(true);
+    setError(null);
+  }, [answers, spinning, stageKey, wheelOptions]);
+
+  const handleSpinEnd = useCallback(() => {
+    if (pending && stageKey !== 'name' && stageKey !== 'result') {
+      setAnswers((previous) => ({ ...previous, [stageKey]: pending }));
+      setCharacter(null);
+      setSaved(false);
+    }
+    setSpinning(false);
+    setPending(null);
+  }, [pending, stageKey]);
+
+  const handleReroll = useCallback(() => {
+    if (stageKey === 'name' || stageKey === 'result') return;
+    setAnswers((previous) => {
+      const next = { ...previous };
+      delete next[stageKey];
+      return next;
     });
-  }, [reroll, mode, name, nameSource]);
+    setPending(null);
+    setSpinning(false);
+    setCharacter(null);
+    setSaved(false);
+  }, [stageKey]);
 
-  const handleSave = useCallback(() => {
-    if (!character) return;
-    navigate(`/character/${character.id}`);
-  }, [character, navigate]);
+  const handleNext = useCallback(() => {
+    const index = STAGE_ORDER.indexOf(stageKey);
+    if (index < 0 || index >= STAGE_ORDER.length - 1) return;
+    setStageKey(STAGE_ORDER[index + 1]);
+  }, [stageKey]);
 
-  const resultFor = useCallback((key: SpinKey) => {
-    if (!character) return null;
-    const map: Record<SpinKey, any> = {
-      era: character.era,
-      alignment: character.alignment,
-      title: character.title,
-      clan: character.clan,
-      heritage: character.heritage.status,
-      bloodline: character.bloodline.trait,
-      dojutsu: character.dojutsu.eye,
-      chakra: character.chakra.primary,
-      fightingStyle: character.fightingStyle.primary,
-      summoning: character.summoning.contract,
-      rank: character.rank.rank,
-      personality: { id: 'p', label: character.personality.primaryTrait, category: '', rarity: 'Common' as const, sourceStatus: 'game-original' as const, description: '' },
-      weakness: character.weaknesses[0] ? { id: 'w', label: character.weaknesses[0].label, category: '', rarity: 'Common' as const, sourceStatus: 'game-original' as const, description: character.weaknesses[0].description } : null,
-      fate: character.fate,
-      reputation: { id: 'r', label: character.reputation.label, category: '', rarity: 'Common' as const, sourceStatus: 'game-original' as const, description: character.reputation.description },
-    };
-    return map[key] || null;
-  }, [character]);
+  const finalizeCharacter = useCallback(() => {
+    const trimmed = name.trim();
+    const seed = `wheel-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
 
-  if (error) {
-    return (
-      <div className="page container">
-        <div className="card alert alert-error">{error}</div>
-        <button className="btn btn-secondary" onClick={handleGenerate}>Try Again</button>
-      </div>
-    );
-  }
+    try {
+      const generated = generateCharacter(
+        {
+          mode,
+          name: trimmed || undefined,
+          nameSource: trimmed ? 'manual' : 'generated',
+          seed,
+          clanId: answers.clan?.id,
+          heritageId: answers.heritage?.id,
+          bloodlineId: answers.bloodline?.id,
+          rankId: answers.rank?.id,
+          fightingStyleId: answers.style?.id,
+        },
+        dataContext
+      );
+      setCharacter(generated);
+      setSaved(false);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal mewujudkan karakter.');
+    }
+  }, [answers, name, mode]);
+
+  const persistCharacter = useCallback((): boolean => {
+    if (!character) return false;
+    try {
+      saveCharacter(character);
+      setSaved(true);
+      refreshLeaderboard();
+      setError(null);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal menyimpan karakter.');
+      return false;
+    }
+  }, [character, refreshLeaderboard]);
+
+  const saveAndOpen = useCallback(() => {
+    if (persistCharacter()) {
+      navigate(`/character/${character?.id}`);
+    }
+  }, [character?.id, navigate, persistCharacter]);
+
+  const reset = useCallback(() => {
+    setStageKey('name');
+    setName('');
+    setAnswers({});
+    setPending(null);
+    setSpinning(false);
+    setSpinToken(0);
+    setCharacter(null);
+    setSaved(false);
+    setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const totalWeight = displayOptions.reduce((sum, option) => sum + option.weight, 0);
+  const highlightId =
+    stageKey === 'result'
+      ? answers.clan?.id ?? null
+      : currentAnswer?.id ?? null;
+
+  const centerLabel =
+    stageKey === 'name' ? 'NAMA' : stageKey === 'result' ? 'HASIL' : 'PUTAR';
 
   return (
-    <div className="page container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <div>
-          <h2 style={{ fontSize: '1.25rem' }}>Character Generator</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Spin attributes to build a shinobi dossier.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <label style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem' }}>Mode:</label>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as any)}
-            className="form-input"
-            style={{ width: '120px', minHeight: '44px' }}
-          >
-            <option value="strict">Strict (lore)</option>
-            <option value="au">AU (custom)</option>
-          </select>
-        </div>
+    <div className="sg-page">
+      <div className="steps" aria-label="Tahap pembuatan karakter">
+        {GROUPS.map((group, index) => {
+          const active = group.keys.includes(stageKey);
+          const done = group.keys.every((key) => {
+            if (key === 'name') return stageKey !== 'name';
+            if (key === 'result') return Boolean(character);
+            return Boolean(answers[key]);
+          });
+          return (
+            <span
+              key={group.id}
+              className={active ? 'active' : done ? 'done' : undefined}
+              aria-current={active ? 'step' : undefined}
+            >
+              {String(index + 1).padStart(2, '0')} {group.label}
+            </span>
+          );
+        })}
       </div>
 
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <input
-          className="form-input"
-          placeholder="Character name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ flex: 1, minWidth: '200px', minHeight: '44px' }}
-        />
-        <button className="btn btn-primary" onClick={handleGenerate} disabled={loading} style={{ minHeight: '44px' }}>
-          {loading ? 'Generating...' : 'Generate All'}
-        </button>
-      </div>
+      {error && <div className="alert alert-error">{error}</div>}
 
-      {SECTIONS.map((section) => (
-        <SpinSection
-          key={section.title}
-          title={section.title}
-          keys={section.keys}
-          character={character}
-          spinningKey={spinningKey}
-          handleSpin={handleSpin}
-          loading={loading}
-          resultFor={resultFor}
-        />
-      ))}
+      <div className="sg-main">
+        <section className="wheel-card" aria-label="Roda undian">
+          <Wheel
+            key={stageKey}
+            options={displayOptions.map((option) => ({
+              id: option.id,
+              label: option.label,
+              weight: option.weight,
+            }))}
+            targetId={pending?.id ?? null}
+            highlightId={highlightId}
+            spinToken={spinToken}
+            spinning={spinning}
+            onSpinEnd={handleSpinEnd}
+            onSpin={
+              stageKey === 'name'
+                ? () => document.getElementById('sg-name-input')?.focus()
+                : stageKey === 'result'
+                  ? undefined
+                  : handleSpin
+            }
+            reducedMotion={reducedMotion}
+            disabled={
+              spinning ||
+              stageKey === 'result' ||
+              Boolean(currentAnswer) ||
+              (stageKey !== 'name' && displayOptions.length === 0)
+            }
+            centerLabel={centerLabel}
+            centerSubLabel={
+              stageKey === 'name'
+                ? 'MULAI'
+                : stageKey === 'result'
+                  ? 'SELESAI'
+                  : currentAnswer
+                    ? 'TERKUNCI'
+                    : 'KLIK'
+            }
+          />
+        </section>
+
+        <aside className="side-panel" aria-live="polite">
+          {stageKey === 'name' && (
+            <>
+              <div className="eyebrow">Tahap 01 · Nama</div>
+              <h1 className="stage-title">Namai shinobi-mu</h1>
+              <div className="result-box">
+                <strong>{name.trim() || 'Siapa namamu?'}</strong>
+                <small>
+                  {name.trim()
+                    ? 'Tekan Simpan Nama untuk membuka roda klan.'
+                    : 'Nama akan tercatat di dossier dan leaderboard lokal.'}
+                </small>
+              </div>
+
+              <div className="name-controls">
+                <label className="sr-only" htmlFor="sg-name-input">Nama shinobi</label>
+                <input
+                  id="sg-name-input"
+                  className="form-input"
+                  type="text"
+                  maxLength={28}
+                  autoComplete="off"
+                  placeholder="Nama shinobi"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') commitName();
+                  }}
+                />
+                <div className="name-actions">
+                  <button type="button" className="btn btn-primary" onClick={commitName} disabled={!name.trim()}>
+                    Simpan Nama
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={rollName}>
+                    Acak Nama
+                  </button>
+                </div>
+              </div>
+
+              <p className="hint">
+                Roda pertama menentukan klan. Setiap klan membawa predileksi dan buff yang berbeda.
+              </p>
+            </>
+          )}
+
+          {currentStage && (
+            <>
+              <div className="eyebrow">{currentStage.eyebrow}</div>
+              <h1 className="stage-title">{currentStage.title}</h1>
+              <div className="result-box">
+                <strong>
+                  {spinning
+                    ? 'Mengundi…'
+                    : currentAnswer
+                      ? currentAnswer.label
+                      : currentStage.prompt}
+                </strong>
+                <small>
+                  {spinning
+                    ? 'Roda takdir sedang berputar.'
+                    : currentAnswer
+                      ? currentAnswer.description || 'Hasil tersimpan. Lanjut ke tahap berikutnya.'
+                      : 'Tekan PUTAR di tengah roda atau tombol di bawah.'}
+                </small>
+              </div>
+
+              <div className="panel-actions">
+                {currentAnswer ? (
+                  <>
+                    <button type="button" className="btn btn-primary" onClick={handleNext}>
+                      Lanjut →
+                    </button>
+                    <button type="button" className="btn btn-secondary" onClick={handleReroll}>
+                      Ulangi undian
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleSpin}
+                    disabled={spinning}
+                  >
+                    {spinning ? 'Berputar…' : `Putar ${currentStage.noun}`}
+                  </button>
+                )}
+              </div>
+
+              <p className="hint">{currentStage.hint}</p>
+
+              <div className="chips" aria-label="Daftar pilihan dan peluang">
+                {displayOptions.map((option) => (
+                  <span className="chip" key={option.id}>
+                    {option.label}
+                    <b>{((option.weight / totalWeight) * 100).toFixed(2)}%</b>
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {stageKey === 'result' && (
+            <>
+              <div className="eyebrow">Tahap 05 · Hasil</div>
+              <h1 className="stage-title">{character ? character.name : 'Wujudkan karakter'}</h1>
+              <div className="result-box">
+                <strong>
+                  {character ? character.title.label : 'Semua unsur sudah terkumpul.'}
+                </strong>
+                <small>
+                  {character
+                    ? `${character.era.label} · ${character.rank.rank.label} · ${character.fightingStyle.primary.label}`
+                    : 'Tekan tombol di bawah untuk mengunci takdir dan menghitung kekuatan.'}
+                </small>
+              </div>
+
+              {character ? (
+                <>
+                  <div className="result-tags">
+                    <span>{character.clan.label}</span>
+                    <span>{character.heritage.status.label}</span>
+                    <span>{character.bloodline.trait.label}</span>
+                    <span>{character.chakra.primary.label}</span>
+                    <span>{character.dojutsu.eye.label}</span>
+                  </div>
+
+                  <div className="panel-actions">
+                    <button type="button" className="btn btn-primary" onClick={saveAndOpen}>
+                      {saved ? 'Buka Detail →' : 'Simpan & Lihat Detail'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={persistCharacter}
+                      disabled={saved}
+                    >
+                      {saved ? 'Tersimpan ✓' : 'Simpan ke Koleksi'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="panel-actions">
+                  <button type="button" className="btn btn-primary" onClick={finalizeCharacter}>
+                    Wujudkan Karakter
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setStageKey('style')}>
+                    Kembali ke gaya
+                  </button>
+                </div>
+              )}
+
+              <p className="hint">
+                Karakter disimpan di browser ini. Ekspor JSON dari halaman Data &amp; penyimpanan
+                untuk memindahkannya ke perangkat lain.
+              </p>
+            </>
+          )}
+        </aside>
+
+        <div className="info-stack">
+        <aside className="info-panel saved-results" aria-labelledby="sg-rolls-title">
+          <h2 id="sg-rolls-title">Undianmu</h2>
+          <table className="rolls-table">
+            <thead>
+              <tr>
+                <th scope="col">Kategori</th>
+                <th scope="col">Hasil</th>
+              </tr>
+            </thead>
+            <tbody aria-live="polite">
+              {rolls.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="panel-empty">Belum ada undian.</td>
+                </tr>
+              ) : (
+                rolls.map((row) => (
+                  <tr key={row.category}>
+                    <th scope="row">{row.category}</th>
+                    <td>{row.result}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </aside>
+
+        <aside className="info-panel leaderboard" aria-labelledby="sg-leaderboard-title">
+          <h2 id="sg-leaderboard-title">Leaderboard karakter</h2>
+          {leaderboard.length === 0 ? (
+            <p className="panel-empty">
+              Selesaikan karakter pertamamu, lalu simpan ke koleksi untuk masuk leaderboard.
+            </p>
+          ) : (
+            <div className="leader-list" aria-live="polite">
+              {leaderboard.map((entry, index) => (
+                <button
+                  type="button"
+                  className="leader-item"
+                  key={entry.id}
+                  onClick={() => navigate(`/character/${entry.id}`)}
+                >
+                  <span className="leader-rank">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="leader-name">{entry.name}</span>
+                  <span className="leader-power">{Math.round(entry.combatRating.score)}</span>
+                  <span className="leader-clan">
+                    {entry.clan.label} · {entry.rank.rank.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </aside>
+        </div>
+      </div>
 
       {character && (
-        <div style={{ marginTop: '1.5rem', borderTop: '1px solid #334155', paddingTop: '1rem' }}>
-          <h3 style={{ fontSize: '1rem', marginBottom: '0.6rem' }}>Preview</h3>
-          <div className="card" style={{ padding: '1rem' }}>
-            <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>{character.name}</div>
-            <div style={{ color: '#94a3b8', marginBottom: '0.4rem' }}>{character.title.label} • {character.era.label}</div>
-            <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
-              {character.clan.label} • {character.fightingStyle.primary.label} • Rank {character.rank.rank.label} (Tier {character.rank.combatTier})
+        <section className="power-summary" aria-live="polite">
+          <div className="power-head">
+            <div>
+              <div className="eyebrow">Kekuatan keseluruhan</div>
+              <strong className="power-score">{Math.round(character.combatRating.score)}</strong>
+            </div>
+            <div className="power-copy">
+              <div className="power-class">{powerClass(character.rank.combatTier)}</div>
+              <p>
+                {character.abilities.length} kemampuan · {character.weaknesses.length} kelemahan ·
+                {' '}{character.chakra.primary.label} · {character.dojutsu.eye.label}
+              </p>
             </div>
           </div>
-          <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-primary" onClick={handleSave} disabled={loading} style={{ minHeight: '44px', flex: 1 }}>
-              Save to Collection
-            </button>
-            <button className="btn btn-secondary" onClick={handleGenerate} disabled={loading} style={{ minHeight: '44px' }}>
-              Generate All
-            </button>
+
+          <div className="stat-grid">
+            {STAT_LABELS.map(([key, label]) => (
+              <div className="stat-item" key={key}>
+                <span>{label}</span>
+                <strong>{character.stats[key]}</strong>
+              </div>
+            ))}
           </div>
-        </div>
+
+          <p className="power-note">
+            Skor buatan game dari 12 statistik inti, bonus kemampuan, dan penalti kelemahan.
+            Bukan skala resmi Naruto.
+          </p>
+
+          <div className="power-abilities">
+            {character.abilities.map((ability) => (
+              <span className="ability-pill" key={ability.id}>{ability.name}</span>
+            ))}
+            {character.weaknesses.map((weakness) => (
+              <span className="ability-pill is-weakness" key={weakness.id}>{weakness.label}</span>
+            ))}
+          </div>
+        </section>
       )}
+
+      <div className="sg-bottom">
+        <button type="button" className="btn btn-secondary reset-button" onClick={reset}>
+          Mulai dari awal
+        </button>
+
+        <details className="catalog">
+          <summary>Katalog, sumber, dan aturan dunia</summary>
+          <p>
+            Katalog ini menggabungkan entri Naruto, Boruto, dan Two Blue Vortex dengan beberapa
+            opsi orisinal game. Bobot roda adalah keseimbangan buatan, bukan persentase resmi.
+          </p>
+          <p>
+            {mode === 'au'
+              ? 'Mode alternatif (AU) mengaktifkan opsi OC di roda. Hasil tetap ditentukan engine terlebih dahulu, lalu roda berhenti pada hasil tersebut.'
+              : 'Mode lore ketat menyaring opsi bertanda OC dari roda. Hasil ditentukan engine terlebih dahulu, lalu roda berhenti pada hasil tersebut.'}
+          </p>
+          <div className="catalog-grid">
+            <span>100 title awal</span>
+            <span>{eligible(clans, mode).length} klan</span>
+            <span>{eligible(heritageStatuses, mode).length} status warisan</span>
+            <span>{eligible(bloodlineTraits, mode).length} sifat darah</span>
+            <span>{eligible(ranks, mode).length} ranga</span>
+            <span>{eligible(fightingStyles, mode).length} gaya</span>
+          </div>
+        </details>
+      </div>
     </div>
   );
 }

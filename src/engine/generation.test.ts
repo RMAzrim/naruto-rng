@@ -62,4 +62,26 @@ describe('generateCharacter', () => {
     const char = generateCharacter(baseSettings, dataContext);
     expect(char.combatRating.explanation).toBeDefined();
   });
+
+  it('respects wheel overrides and rank combat tier', () => {
+    const char = generateCharacter(
+      {
+        ...baseSettings,
+        seed: 'override-seed',
+        clanId: 'uchiha',
+        heritageId: 'pure-clan',
+        bloodlineId: 'kekkai-genkai',
+        rankId: 'kage',
+        fightingStyleId: 'ninjutsu',
+      },
+      dataContext
+    );
+
+    expect(char.clan.optionId).toBe('uchiha');
+    expect(char.heritage.status.optionId).toBe('pure-clan');
+    expect(char.bloodline.trait.optionId).toBe('kekkai-genkai');
+    expect(char.rank.rank.optionId).toBe('kage');
+    expect(char.rank.combatTier).toBe(5);
+    expect(char.fightingStyle.primary.optionId).toBe('ninjutsu');
+  });
 });

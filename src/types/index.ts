@@ -17,6 +17,8 @@ export type SpinOption = {
   tags?: string[];
   combatEffect?: string;
   narrativeEffect?: string;
+  /** Rank metadata used by the combat rating pipeline. */
+  combatTier?: number;
 };
 
 export type SpinDefinition = {

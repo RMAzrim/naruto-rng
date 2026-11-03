@@ -11,20 +11,21 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "~5.5.4",
-    "vite": "^5.4.2",
-    "vitest": "^2.0.5",
     "jsdom": "^24.1.0",
     "testing-library": "github:testing-library/dom-testing-library",
-    "@testing-library/react": "^16.0.0",
-    "@testing-library/jest-dom": "^6.4.8"
+    "typescript": "~5.5.4",
+    "vite": "^5.4.2",
+    "vitest": "^2.0.5"
   }
 }

@@ -35,6 +35,7 @@ function toSpinOption(raw: any, idField: string = 'id'): SpinOption {
     tags: raw.tags,
     combatEffect: raw.combatEffect,
     narrativeEffect: raw.narrativeEffect,
+    combatTier: raw.combatTier,
   };
 }
 

@@ -29,6 +29,12 @@ export interface GenerationSettings {
   nameSource?: 'manual' | 'generated';
   eraId?: string;
   seed?: string;
+  /** Optional overrides used by the staged wheel flow. */
+  clanId?: string;
+  heritageId?: string;
+  bloodlineId?: string;
+  rankId?: string;
+  fightingStyleId?: string;
 }
 
 export interface DataContext {
@@ -67,20 +73,20 @@ export function generateCharacter(
 
   const alignment = toSpinResult(pickOption(data.alignments, rng));
   const origin = generateOrigin(data.villages, rng, era, mode);
-  const clanOpt = pickOption(data.clans, rng, undefined, origin, era, mode);
+  const clanOpt = pickOption(data.clans, rng, settings.clanId, origin, era, mode);
   const clan = toSpinResult(clanOpt);
-  const heritage = generateHeritage(data.heritageStatuses, rng, clan, era, mode);
-  const bloodline = generateBloodline(data.bloodlineTraits, rng, heritage, clan, mode);
+  const heritage = generateHeritage(data.heritageStatuses, rng, clan, era, mode, settings.heritageId);
+  const bloodline = generateBloodline(data.bloodlineTraits, rng, heritage, clan, mode, settings.bloodlineId);
   const dojutsu = generateDojutsu(data.dojutsu, rng, clan, heritage, bloodline, mode);
   const chakra = generateChakra(data.chakraNatures, rng, clan, bloodline, mode);
   const affiliation = generateAffiliations(data.affiliations, rng, era, mode);
-  const fightingStyleOpt = pickOption(data.fightingStyles, rng);
+  const fightingStyleOpt = pickOption(data.fightingStyles, rng, settings.fightingStyleId);
   const fightingStyle = toSpinResult(fightingStyleOpt);
   const summoning = generateSummoning(data.summonings, rng, mode);
-  const rankOpt = pickOption(data.ranks, rng);
+  const rankOpt = pickOption(data.ranks, rng, settings.rankId);
   const rankData: RankData = {
     rank: toSpinResult(rankOpt),
-    combatTier: (rankOpt as any).combatTier || 2,
+    combatTier: rankOpt.combatTier ?? 2,
   };
   const fightingStyleData = buildFightingStyleData(fightingStyle, data.fightingStyles);
   const personality = generatePersonality(data.personalities, rng);
@@ -160,15 +166,16 @@ function pickOption(
   era?: SpinResult,
   mode: GameMode = 'strict'
 ): SpinOption {
+  if (preferredId) {
+    const preferred = options.find((o) => o.id === preferredId);
+    if (preferred) return preferred;
+  }
+
   let pool = options.filter((o) => !o.eraEligibility || !era || o.eraEligibility.includes(era.optionId));
   if (mode !== 'au') {
     pool = pool.filter((o) => o.sourceStatus !== 'oc');
   }
   if (pool.length === 0) pool = options;
-  if (preferredId) {
-    const pref = pool.find((o) => o.id === preferredId);
-    if (pref) return pref;
-  }
   const weighted = pool.map((o) => ({ item: o, weight: o.weight }));
   return weightedSelect(rng, weighted).item;
 }
@@ -190,9 +197,10 @@ function generateHeritage(
   rng: SeededRandom,
   clan: SpinResult,
   era: SpinResult,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): HeritageData {
-  const status = toSpinResult(pickOption(statuses, rng, undefined, undefined, era, mode));
+  const status = toSpinResult(pickOption(statuses, rng, preferredId, undefined, era, mode));
   const confidence: HeritageData['confidence'] = rng.pick(['confirmed', 'probable', 'rumored', 'unknown']);
   const ancestryIds = clan.optionId !== 'clanless' ? [clan.optionId] : [];
   return {
@@ -208,9 +216,10 @@ function generateBloodline(
   rng: SeededRandom,
   heritage: HeritageData,
   clan: SpinResult,
-  mode: GameMode
+  mode: GameMode,
+  preferredId?: string
 ): BloodlineData {
-  const trait = toSpinResult(pickOption(traits, rng));
+  const trait = toSpinResult(pickOption(traits, rng, preferredId));
   const state: BloodlineData['state'] = trait.optionId === 'none' ? 'absent' : rng.pick(['dormant', 'awakened', 'mastered']);
   return {
     trait,
@@ -405,7 +414,7 @@ function deriveStats(
   weaknesses: WeaknessData[],
   chakra: ChakraData
 ): CharacterStats {
-  const tier = (rank as any).combatTier || 2;
+  const tier = rank.combatTier ?? 2;
   const base = 40 + tier * 10;
   const clamp = (val: number) => Math.min(100, Math.max(0, Math.round(val)));
 

@@ -1,54 +1,74 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { loadCollection, deleteCharacter } from '@/engine/persistence';
+import { Link, useNavigate } from 'react-router-dom';
+import { deleteCharacter, loadCollection } from '@/engine/persistence';
 import { CharacterCard } from '@/components/CharacterCard';
+import type { Character } from '@/types';
 
 export default function CollectionPage() {
-  const [characters, setCharacters] = useState<any[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [query, setQuery] = useState('');
-  const [confirmId, setConfirmId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const reload = useCallback(() => setCharacters(loadCollection()), []);
-  useEffect(() => { reload(); }, []);
 
-  const filtered = characters.filter((c) =>
-    c.name.toLowerCase().includes(query.toLowerCase())
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const filtered = characters.filter((character) =>
+    character.name.toLowerCase().includes(query.toLowerCase())
   );
 
   const handleDelete = useCallback((id: string) => {
-    if (!confirm('Delete this character?')) return;
+    if (!confirm('Hapus karakter ini dari koleksi?')) return;
     deleteCharacter(id);
-    setConfirmId(null);
     reload();
   }, [reload]);
 
   return (
     <div className="page container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <h2 style={{ fontSize: '1.25rem' }}>Collection</h2>
-        <div style={{ flex: 1, minWidth: '220px' }}>
-          <input
-            className="form-input"
-            placeholder="Search by name"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            style={{ minHeight: '44px' }}
-          />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div>
+          <div className="eyebrow">Arsip shinobi</div>
+          <h1 style={{ fontSize: '1.4rem' }}>Koleksi karakter</h1>
         </div>
-        <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{characters.length} characters saved</div>
+        <Link className="btn btn-primary" to="/generator">
+          + Buat karakter
+        </Link>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <input
+          className="form-input"
+          placeholder="Cari nama shinobi…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          style={{ flex: 1, minWidth: '220px' }}
+        />
+        <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
+          {filtered.length} / {characters.length} karakter
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="empty-state">
-          <p>No characters yet. <a href="/generator" style={{ color: '#38bdf8', fontWeight: '600' }}>Create one</a>.</p>
+        <div className="empty-state card">
+          <p>
+            {characters.length === 0
+              ? 'Belum ada karakter. Selesaikan roda takdir pertamamu.'
+              : 'Tidak ada nama yang cocok dengan pencarian.'}
+          </p>
+          {characters.length === 0 && (
+            <Link className="btn btn-primary" to="/generator" style={{ marginTop: '0.9rem' }}>
+              Mulai generator
+            </Link>
+          )}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
-          {filtered.map((c) => (
+        <div className="collection-grid">
+          {filtered.map((character) => (
             <CharacterCard
-              key={c.id}
-              character={c}
+              key={character.id}
+              character={character}
               onSelect={(id) => navigate(`/character/${id}`)}
               onDelete={handleDelete}
             />

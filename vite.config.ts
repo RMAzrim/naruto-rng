@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  // Relative assets keep the build portable: GitHub Pages project sites,
+  // `vite preview`, and local static hosts all resolve them correctly.
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {

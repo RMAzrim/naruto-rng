@@ -1,26 +1,54 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getCharacter, deleteCharacter } from '@/engine/persistence';
+import { useNavigate, useParams } from 'react-router-dom';
+import { deleteCharacter, getCharacter } from '@/engine/persistence';
+import type { Character } from '@/types';
+
+const STAT_ROWS: [keyof Character['stats'], string][] = [
+  ['ninjutsu', 'Ninjutsu'],
+  ['taijutsu', 'Taijutsu'],
+  ['genjutsu', 'Genjutsu'],
+  ['kenjutsu', 'Kenjutsu'],
+  ['chakraControl', 'Kontrol chakra'],
+  ['chakraReserves', 'Cadangan chakra'],
+  ['speed', 'Kecepatan'],
+  ['strength', 'Kekuatan'],
+  ['durability', 'Daya tahan'],
+  ['intelligence', 'Kecerdasan'],
+  ['perception', 'Persepsi'],
+  ['stamina', 'Stamina'],
+];
+
+function powerClass(tier: number): string {
+  if (tier >= 5) return 'Kelas Kage';
+  if (tier >= 4) return 'Elit Jōnin';
+  if (tier >= 3) return 'Chūnin';
+  if (tier >= 2) return 'Genin';
+  if (tier >= 1) return 'Akademi';
+  return 'Sipil';
+}
 
 export default function CharacterPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [character, setCharacter] = useState<any>(null);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const c = id ? getCharacter(id) : undefined;
-    setCharacter(c ?? null);
+    const found = id ? getCharacter(id) : undefined;
+    setCharacter(found ?? null);
     setLoading(false);
   }, [id]);
 
-  if (loading) return <div className="page container">Loading...</div>;
+  if (loading) {
+    return <div className="page container"><div className="card">Memuat dossier…</div></div>;
+  }
+
   if (!character) {
     return (
       <div className="page container">
-        <div className="card alert alert-error">Character not found.</div>
+        <div className="card alert alert-error">Karakter tidak ditemukan.</div>
         <button className="btn btn-secondary" onClick={() => navigate('/collection')}>
-          Back to Collection
+          Kembali ke koleksi
         </button>
       </div>
     );
@@ -29,115 +57,135 @@ export default function CharacterPage() {
   return (
     <div className="page container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <h2 style={{ fontSize: '1.25rem' }}>Character Dossier</h2>
+        <div>
+          <div className="eyebrow">Dossier shinobi</div>
+          <h1 style={{ fontSize: '1.35rem' }}>{character.name}</h1>
+        </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="btn btn-secondary" onClick={() => navigate('/collection')} style={{ minHeight: '44px' }}>
-            Back
+          <button className="btn btn-secondary" onClick={() => navigate('/collection')}>
+            Kembali
           </button>
-          <button className="btn btn-danger" onClick={() => { if (confirm('Delete this character?')) { deleteCharacter(id!); navigate('/collection'); } }} style={{ minHeight: '44px' }}>
-            Delete
+          <button
+            className="btn btn-danger"
+            onClick={() => {
+              if (confirm(`Hapus ${character.name} dari koleksi?`)) {
+                deleteCharacter(character.id);
+                navigate('/collection');
+              }
+            }}
+          >
+            Hapus
           </button>
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <div style={{ fontSize: '1.75rem', fontWeight: '800' }}>{character.name}</div>
-        <div style={{ color: '#94a3b8', marginBottom: '0.5rem' }}>
-          <span className={`badge ${character.title.rarity.toLowerCase()}`}>{character.title.rarity}</span>
-          {' '}
-          {character.canonStatus.toUpperCase()} • {character.mode.toUpperCase()}
+      <section className="card dossier-hero">
+        <div>
+          <h2 className="dossier-name">{character.name}</h2>
+          <div className="dossier-meta">
+            <span className={`badge ${character.title.rarity.toLowerCase()}`}>{character.title.rarity}</span>
+            <span>{character.canonStatus.toUpperCase()}</span>
+            <span>{character.mode.toUpperCase()}</span>
+            <span>{character.era.label}</span>
+          </div>
+          <p className="dossier-title">{character.title.label}</p>
+          <p className="dossier-sub">
+            {character.clan.label} · {character.rank.rank.label} · {character.fightingStyle.primary.label}
+          </p>
         </div>
-        <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{character.title.label}</div>
-        <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-          {character.era.label} • {character.rank.rank.label} • Combat Tier {character.rank.combatTier}
-        </div>
-      </div>
 
-      <div className="grid">
+        <div className="dossier-power">
+          <span>Kekuatan</span>
+          <strong>{Math.round(character.combatRating.score)}</strong>
+          <small>{powerClass(character.rank.combatTier)}</small>
+        </div>
+      </section>
+
+      <div className="grid" style={{ marginTop: '1rem' }}>
         <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem' }}>Identity</h3>
-          <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-            <div><strong>Name:</strong> {character.name}</div>
-            <div><strong>Name source:</strong> {character.nameSource}</div>
+          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem', color: 'var(--accent)' }}>Identitas</h3>
+          <div className="dossier-list">
+            <div><strong>Nama:</strong> {character.name}</div>
+            <div><strong>Sumber nama:</strong> {character.nameSource === 'manual' ? 'ditulis pemain' : 'diacak'}</div>
             <div><strong>Alignment:</strong> {character.alignment.label}</div>
             <div><strong>Title:</strong> {character.title.label}</div>
             <div><strong>Fate:</strong> {character.fate.label}</div>
-            <div><strong>Reputation:</strong> {character.reputation.label}</div>
+            <div><strong>Reputasi:</strong> {character.reputation.label}</div>
           </div>
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem' }}>Origin & Heritage</h3>
-          <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-            <div><strong>Birthplace:</strong> {character.origin.birthplace.label}</div>
-            <div><strong>Raised in:</strong> {character.origin.raisedIn.label}</div>
-            <div><strong>Clan:</strong> {character.clan.label}</div>
-            <div><strong>Heritage:</strong> {character.heritage.status.label} ({character.heritage.confidence})</div>
-            <div><strong>Bloodline:</strong> {character.bloodline.trait.label} ({character.bloodline.state})</div>
+          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem', color: 'var(--accent)' }}>Asal &amp; warisan</h3>
+          <div className="dossier-list">
+            <div><strong>Lahir di:</strong> {character.origin.birthplace.label}</div>
+            <div><strong>Dibesarkan di:</strong> {character.origin.raisedIn.label}</div>
+            <div><strong>Klan:</strong> {character.clan.label}</div>
+            <div><strong>Status warisan:</strong> {character.heritage.status.label} ({character.heritage.confidence})</div>
+            <div><strong>Sifat darah:</strong> {character.bloodline.trait.label} ({character.bloodline.state})</div>
           </div>
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem' }}>Abilities</h3>
-          <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-            <div><strong>Dojutsu:</strong> {character.dojutsu.eye.label} ({character.dojutsu.stage})</div>
-            <div><strong>Chakra:</strong> {character.chakra.primary.label} {character.chakra.secondary ? ' + ' + character.chakra.secondary.label : ''}</div>
-            <div><strong>Fighting style:</strong> {character.fightingStyle.primary.label}</div>
+          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem', color: 'var(--accent)' }}>Kemampuan</h3>
+          <div className="dossier-list">
+            <div><strong>Dōjutsu:</strong> {character.dojutsu.eye.label} ({character.dojutsu.stage})</div>
+            <div>
+              <strong>Chakra:</strong> {character.chakra.primary.label}
+              {character.chakra.secondary ? ` + ${character.chakra.secondary.label}` : ''}
+            </div>
+            <div><strong>Gaya:</strong> {character.fightingStyle.primary.label}</div>
             <div><strong>Summoning:</strong> {character.summoning.contract.label} ({character.summoning.proficiency})</div>
+            <div><strong>Kemampuan:</strong> {character.abilities.map((ability) => ability.name).join(', ') || '—'}</div>
           </div>
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem' }}>Personality & Weakness</h3>
-          <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-            <div><strong>Primary trait:</strong> {character.personality.primaryTrait}</div>
-            <div><strong>Secondary:</strong> {character.personality.secondaryTraits.join(', ') || '—'}</div>
-            <div><strong>Motivation:</strong> {character.personality.motivation}</div>
-            {character.weaknesses.map((w: any, i: number) => (
-              <div key={i}><strong>Weakness {i + 1}:</strong> {w.label} — {w.description}</div>
+          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem', color: 'var(--accent)' }}>Kepribadian &amp; kelemahan</h3>
+          <div className="dossier-list">
+            <div><strong>Sifat utama:</strong> {character.personality.primaryTrait}</div>
+            <div><strong>Sekunder:</strong> {character.personality.secondaryTraits.join(', ') || '—'}</div>
+            <div><strong>Motivasi:</strong> {character.personality.motivation}</div>
+            {character.weaknesses.map((weakness) => (
+              <div key={weakness.id}>
+                <strong>Kelemahan:</strong> {weakness.label} — {weakness.description}
+              </div>
             ))}
           </div>
         </div>
-
-        <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem' }}>Combat Stats</h3>
-          <div style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.8' }}>
-            <div><strong>Ninjutsu:</strong> {character.stats.ninjutsu}</div>
-            <div><strong>Taijutsu:</strong> {character.stats.taijutsu}</div>
-            <div><strong>Genjutsu:</strong> {character.stats.genjutsu}</div>
-            <div><strong>Kenjutsu:</strong> {character.stats.kenjutsu}</div>
-            <div><strong>Chakra Control:</strong> {character.stats.chakraControl}</div>
-            <div><strong>Chakra Reserves:</strong> {character.stats.chakraReserves}</div>
-            <div><strong>Speed:</strong> {character.stats.speed}</div>
-            <div><strong>Strength:</strong> {character.stats.strength}</div>
-            <div><strong>Durability:</strong> {character.stats.durability}</div>
-            <div><strong>Intelligence:</strong> {character.stats.intelligence}</div>
-            <div><strong>Perception:</strong> {character.stats.perception}</div>
-            <div><strong>Stamina:</strong> {character.stats.stamina}</div>
-          </div>
-          <div style={{ marginTop: '0.6rem', fontSize: '0.85rem', color: '#38bdf8' }}>
-            <strong>Combat Rating:</strong> {character.combatRating.score}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.2rem' }}>{character.combatRating.explanation}</div>
-        </div>
       </div>
 
-      <div className="card" style={{ marginTop: '1rem' }}>
-        <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem' }}>Validation</h3>
-        <div style={{ fontSize: '0.85rem', color: character.validation.valid ? '#4ade80' : '#f87171' }}>
-          {character.validation.valid ? 'Valid — no errors.' : 'Has validation issues.'}
+      <section className="card" style={{ marginTop: '1rem' }}>
+        <h3 style={{ fontSize: '0.95rem', marginBottom: '0.7rem', color: 'var(--accent)' }}>Statistik tempur</h3>
+        <div className="stat-lines">
+          {STAT_ROWS.map(([key, label]) => (
+            <div className="stat-line" key={key}>
+              <span>{label}</span>
+              <span className="bar"><i style={{ width: `${character.stats[key]}%` }} /></span>
+              <strong>{character.stats[key]}</strong>
+            </div>
+          ))}
+        </div>
+        <p className="power-note" style={{ marginTop: '0.8rem' }}>
+          Combat rating {character.combatRating.score} — {character.combatRating.explanation}
+        </p>
+      </section>
+
+      <section className="card" style={{ marginTop: '1rem' }}>
+        <h3 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', color: 'var(--accent)' }}>Validasi</h3>
+        <div style={{ fontSize: '0.85rem', color: character.validation.valid ? 'var(--success)' : 'var(--danger)' }}>
+          {character.validation.valid ? 'Valid — tidak ada error.' : 'Ada masalah validasi.'}
         </div>
         {character.validation.warnings.length > 0 && (
-          <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#fbbf24' }}>
-            <strong>Warnings:</strong> {character.validation.warnings.map((w: any) => w.message).join('; ')}
+          <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--accent)' }}>
+            <strong>Peringatan:</strong> {character.validation.warnings.map((warning) => warning.message).join('; ')}
           </div>
         )}
         {character.validation.errors.length > 0 && (
-          <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: '#f87171' }}>
-            <strong>Errors:</strong> {character.validation.errors.map((e: any) => e.message).join('; ')}
+          <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--danger)' }}>
+            <strong>Error:</strong> {character.validation.errors.map((error) => error.message).join('; ')}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

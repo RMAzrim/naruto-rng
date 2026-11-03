@@ -1,5 +1,6 @@
 import type { Character } from '@/types';
 import { SeededRandom } from './rng';
+import { computeBattleAbilityMods, battleAbilityExplanations, sharinganTomoeBonus, applyDamageMods, applyChakraCost, applyStaminaCost } from './battle-abilities';
 
 export type BattleAction =
   | 'basic-attack'
@@ -71,6 +72,16 @@ export function simulateBattle(
     defending: false,
     setup: 0,
   };
+
+  // Record conditional abilities in decisive factors
+  const p1Mods = computeBattleAbilityMods(c1);
+  const p2Mods = computeBattleAbilityMods(c2);
+  if (p1Mods.specialActions.length > 0) {
+    decisiveFactors.push(`${c1.name} brings: ${p1Mods.specialActions.join(', ')}.`);
+  }
+  if (p2Mods.specialActions.length > 0) {
+    decisiveFactors.push(`${c2.name} brings: ${p2Mods.specialActions.join(', ')}.`);
+  }
 
   // Initiative
   const init1 = c1.stats.speed + c1.stats.perception + rng.nextInt(20);
@@ -156,6 +167,9 @@ function selectAction(
     { action: 'summoning', weight: 2 },
   ];
 
+  const mods = computeBattleAbilityMods(char);
+  const tomoe = sharinganTomoeBonus(char);
+
   const style = char.fightingStyle.primary.optionId;
   if (style === 'taijutsu') {
     weights.find((w) => w.action === 'basic-attack')!.weight += 15;
@@ -175,6 +189,40 @@ function selectAction(
   }
   if (style === 'tactical') {
     weights.find((w) => w.action === 'setup')!.weight += 10;
+  }
+
+  // Conditional ability adjustments
+  if (tomoe >= 3) {
+    weights.find((w) => w.action === 'specialized-attack')!.weight += 10;
+    weights.find((w) => w.action === 'genjutsu')!.weight += 10;
+  } else if (tomoe === 2) {
+    weights.find((w) => w.action === 'specialized-attack')!.weight += 5;
+  } else if (tomoe === 1) {
+    weights.find((w) => w.action === 'basic-attack')!.weight += 5;
+  }
+  if (char.mangekyoAbility === 'kamui') {
+    weights.find((w) => w.action === 'evasion')!.weight += 15;
+  } else if (char.mangekyoAbility) {
+    weights.find((w) => w.action === 'specialized-attack')!.weight += 10;
+  }
+  if (char.susanooStage) {
+    weights.find((w) => w.action === 'defensive')!.weight += 10;
+  }
+  if (char.byakuganMastery) {
+    weights.find((w) => w.action === 'basic-attack')!.weight += 5;
+    weights.find((w) => w.action === 'evasion')!.weight += 5;
+  }
+  if (char.tenseiganMastery) {
+    weights.find((w) => w.action === 'specialized-attack')!.weight += 10;
+  }
+  if (char.rinneganPath === 'deva' || char.rinneganPath === 'asura') {
+    weights.find((w) => w.action === 'specialized-attack')!.weight += 10;
+  }
+  if (char.rinneganPath === 'animal') {
+    weights.find((w) => w.action === 'summoning')!.weight += 10;
+  }
+  if (char.rinneganPath === 'preta') {
+    weights.find((w) => w.action === 'defensive')!.weight += 10;
   }
 
   if (chakra < 15) {
@@ -224,18 +272,21 @@ function executeAction(
   const atkStat = attacker.char.stats;
   const defStat = defender.char.stats;
   const baseDmg = 10 + Math.floor(atkStat.strength / 10) + Math.floor(atkStat.ninjutsu / 10);
+  const mods = computeBattleAbilityMods(attacker.char);
+  const defMods = computeBattleAbilityMods(defender.char);
   const accRoll = rng.next() * 100;
-  const hitChance = 75 + Math.floor((atkStat.perception - defStat.perception) / 5);
+  const hitChance = 75 + Math.floor((atkStat.perception + mods.perceptionBonus - defStat.perception) / 5) + mods.accuracyBonus;
   const hit = accRoll < hitChance;
 
   switch (action) {
     case 'basic-attack': {
-      const damage = hit ? Math.floor(baseDmg * 0.8 * (defender.defending ? 0.6 : 1)) : 0;
+      let damage = hit ? Math.floor(baseDmg * 0.8 * (defender.defending ? 0.6 : 1)) : 0;
+      damage = applyDamageMods(damage, mods, defMods);
       return {
         actionLabel: 'Basic Attack',
         outcome: hit ? 'Hit' : 'Miss',
-        cost: 0,
-        staminaCost: 5,
+        cost: applyChakraCost(0, mods),
+        staminaCost: applyStaminaCost(5, mods),
         damage,
         explanation: hit
           ? `${attacker.char.name} strikes ${defender.char.name} for ${damage} damage.`
@@ -243,27 +294,46 @@ function executeAction(
       };
     }
     case 'specialized-attack': {
-      const cost = 20;
+      const cost = applyChakraCost(20, mods);
       if (attacker.chakra < cost) {
         return {
           actionLabel: 'Specialized Attack',
           outcome: 'Failed (low chakra)',
           cost: 0,
-          staminaCost: 5,
+          staminaCost: applyStaminaCost(5, mods),
           damage: 0,
           explanation: `${attacker.char.name} lacked chakra for the technique.`,
         };
       }
       const bonus = attacker.setup > 0 ? 1 + attacker.setup * 0.5 : 1;
-      const damage = hit ? Math.floor(baseDmg * 1.5 * bonus * (defender.defending ? 0.6 : 1)) : 0;
+      let damage = hit ? Math.floor(baseDmg * 1.5 * bonus * (defender.defending ? 0.6 : 1)) : 0;
+      damage = applyDamageMods(damage, mods, defMods);
+
+      // Mangekyō special effects
+      let mangekyoNote = '';
+      const ma = attacker.char.mangekyoAbility;
+      if (ma) {
+        if (ma === 'amaterasu' || ma === 'kagutsuchi') {
+          damage = Math.floor(damage * 1.3);
+          mangekyoNote = ` ${ma} burns the target.`;
+        } else if (ma === 'tsukuyomi' || ma === 'kotoamatsukami') {
+          // Genjutsu-flavored specialized attack: extra accuracy already applied; note it.
+          mangekyoNote = ` ${ma} distorts the target's perception.`;
+        } else if (ma === 'kamui') {
+          // Kamui: partial damage reduction (phasing)
+          damage = Math.floor(damage * 0.85);
+          mangekyoNote = ' Kamui phases part of the attack.';
+        }
+      }
+
       return {
         actionLabel: 'Specialized Attack',
         outcome: hit ? 'Hit' : 'Miss',
         cost,
-        staminaCost: 10,
+        staminaCost: applyStaminaCost(10, mods),
         damage,
         explanation: hit
-          ? `${attacker.char.name} unleashes a specialized technique for ${damage} damage.`
+          ? `${attacker.char.name} unleashes a specialized technique for ${damage} damage.${mangekyoNote}`
           : `${attacker.char.name}'s technique missed.`,
       };
     }
@@ -271,8 +341,8 @@ function executeAction(
       return {
         actionLabel: 'Defensive Stance',
         outcome: 'Defending',
-        cost: 5,
-        staminaCost: 5,
+        cost: applyChakraCost(5, mods),
+        staminaCost: applyStaminaCost(5, mods),
         damage: 0,
         explanation: `${attacker.char.name} takes a defensive stance.`,
       };
@@ -282,7 +352,7 @@ function executeAction(
         actionLabel: 'Evasion',
         outcome: 'Evading',
         cost: 0,
-        staminaCost: 10,
+        staminaCost: applyStaminaCost(10, mods),
         damage: 0,
         explanation: `${attacker.char.name} attempts to evade.`,
       };
@@ -291,31 +361,39 @@ function executeAction(
       return {
         actionLabel: 'Setup / Charge',
         outcome: 'Charging',
-        cost: 10,
-        staminaCost: 5,
+        cost: applyChakraCost(10, mods),
+        staminaCost: applyStaminaCost(5, mods),
         damage: 0,
         explanation: `${attacker.char.name} prepares for a stronger move.`,
       };
     }
     case 'genjutsu': {
-      const cost = 18;
+      const cost = applyChakraCost(18, mods);
       if (attacker.chakra < cost) {
         return {
           actionLabel: 'Genjutsu',
           outcome: 'Failed (low chakra)',
           cost: 0,
-          staminaCost: 5,
+          staminaCost: applyStaminaCost(5, mods),
           damage: 0,
           explanation: `${attacker.char.name} lacked chakra for genjutsu.`,
         };
       }
-      const success = hit && rng.next() < 0.6;
-      const damage = success ? 5 : 0;
+      // Attacker mangekyo genjutsu boosts success; defender resists via Byakugan/Rinnegan.
+      let successChance = 0.6;
+      const ma = attacker.char.mangekyoAbility;
+      if (ma === 'tsukuyomi' || ma === 'kotoamatsukami') {
+        successChance += 0.25;
+      }
+      successChance -= defMods.genjutsuResistance / 100;
+      const success = hit && rng.next() < successChance;
+      let damage = success ? 5 : 0;
+      damage = applyDamageMods(damage, mods, defMods);
       return {
         actionLabel: 'Genjutsu',
         outcome: success ? 'Hit' : 'Resisted',
         cost,
-        staminaCost: 5,
+        staminaCost: applyStaminaCost(5, mods),
         damage: Math.floor(damage * (defender.defending ? 0.6 : 1)),
         explanation: success
           ? `${attacker.char.name} traps ${defender.char.name} in an illusion.`
@@ -326,30 +404,31 @@ function executeAction(
       return {
         actionLabel: 'Support / Recovery',
         outcome: 'Recovering',
-        cost: 20,
-        staminaCost: 5,
+        cost: applyChakraCost(20, mods),
+        staminaCost: applyStaminaCost(5, mods),
         damage: 0,
         explanation: `${attacker.char.name} recovers chakra and stabilizes.`,
       };
     }
     case 'summoning': {
-      const cost = 30;
+      const cost = applyChakraCost(30, mods);
       if (attacker.chakra < cost || attacker.char.summoning.contract.optionId === 'none') {
         return {
           actionLabel: 'Summoning',
           outcome: 'Failed (no contract)',
           cost: 0,
-          staminaCost: 5,
+          staminaCost: applyStaminaCost(5, mods),
           damage: 0,
           explanation: `${attacker.char.name} has no usable summoning contract.`,
         };
       }
-      const damage = hit ? Math.floor(baseDmg * 1.2 * (defender.defending ? 0.6 : 1)) : 0;
+      let damage = hit ? Math.floor(baseDmg * 1.2 * (defender.defending ? 0.6 : 1)) : 0;
+      damage = applyDamageMods(damage, mods, defMods);
       return {
         actionLabel: 'Summoning Attack',
         outcome: hit ? 'Hit' : 'Miss',
         cost,
-        staminaCost: 10,
+        staminaCost: applyStaminaCost(10, mods),
         damage,
         explanation: hit
           ? `${attacker.char.name}'s summon strikes for ${damage} damage.`

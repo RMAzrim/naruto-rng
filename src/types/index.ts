@@ -224,6 +224,15 @@ export type Character = {
   combatRating: CombatRating;
   validation: ValidationReport;
   history: CharacterHistoryEntry[];
+  /** Conditional progression results populated by the conditional spin engine. */
+  sharinganTomoe?: 'one' | 'two' | 'three' | null;
+  mangekyoAbility?: string | null;
+  susanooStage?: 'ribcage' | 'skeletal' | 'humanoid' | 'armored' | 'perfect' | null;
+  byakuganMastery?: 'basic' | 'advanced' | 'transcendent' | null;
+  tenseiganMastery?: 'basic' | 'advanced' | null;
+  rinneganPath?: 'deva' | 'asura' | 'human' | 'animal' | 'preta' | null;
+  woodRelease?: boolean;
+  iceRelease?: boolean;
 };
 
 export type Collection = {

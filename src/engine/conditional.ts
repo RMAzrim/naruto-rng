@@ -71,7 +71,7 @@ export function evaluateConditionalSpins(
     const allPrereqsMet = def.prerequisites.every((p) => prerequisiteMet(character, p));
 
     // Determine if this spin already has a completed result on the character.
-    const existingResult = character.history.find(
+    const existingResult = character.history?.find(
       (h) => h.field === def.id && h.action === 'generate'
     );
     const completed = Boolean(existingResult);

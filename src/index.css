@@ -1644,3 +1644,85 @@ body[data-reduced-motion='true'] *::after {
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* Conditional spins */
+.conditional-spins {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  background: var(--panel-b);
+}
+
+.conditional-spins .eyebrow {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.conditional-item {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 248, 236, 0.1);
+  margin-bottom: 0.4rem;
+}
+
+.conditional-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.conditional-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.conditional-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.conditional-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.conditional-badge.state-locked {
+  background: rgba(100, 116, 139, 0.2);
+  color: var(--muted);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.conditional-badge.state-available {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.conditional-badge.state-completed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.conditional-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.conditional-result {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 248, 236, 0.1);
+}

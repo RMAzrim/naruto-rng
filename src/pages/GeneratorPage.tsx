@@ -5,6 +5,8 @@ import { generateCharacter } from '@/engine/generation';
 import { dataContext } from '@/hooks/useGeneration';
 import { SeededRandom, weightedSelect } from '@/engine/rng';
 import { loadCollection, saveCharacter } from '@/engine/persistence';
+import { evaluateConditionalSpins, spinConditionalSpin } from '@/engine/conditional';
+import { conditionalSpins } from '@/data/index';
 import { useTheme, type DataMode } from '@/theme/ThemeContext';
 import {
   alignments,
@@ -25,7 +27,7 @@ import {
   villages,
   weaknesses,
 } from '@/data/index';
-import type { Character, SpinOption } from '@/types';
+import type { Character, ConditionalSpinState, SpinOption } from '@/types';
 
 type StageKey =
   | 'name'
@@ -288,6 +290,9 @@ export default function GeneratorPage() {
   const [stageKey, setStageKey] = useState<StageKey>('name');
   const [name, setName] = useState('');
   const [answers, setAnswers] = useState<Partial<Record<SpinStageKey, SpinOption>>>({});
+  const [conditionalSpinStates, setConditionalSpinStates] = useState<{ spinId: string; state: ConditionalSpinState; label: string; unlockReason?: string }[]>([]);
+  const [conditionalResults, setConditionalResults] = useState<Record<string, SpinOption>>({});
+  const [conditionalSpinning, setConditionalSpinning] = useState<string | null>(null);
   const [pending, setPending] = useState<SpinOption | null>(null);
   const [spinToken, setSpinToken] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -319,6 +324,34 @@ export default function GeneratorPage() {
   useEffect(() => {
     refreshLeaderboard();
   }, [refreshLeaderboard]);
+
+  useEffect(() => {
+    // Build a minimal character draft from current answers for conditional spin evaluation.
+    const draft: Record<string, any> = {
+      era: answers.era ? { optionId: answers.era.id } : undefined,
+      alignment: answers.alignment ? { optionId: answers.alignment.id } : undefined,
+      origin: answers.village ? { birthplace: { optionId: answers.village.id } } : undefined,
+      clan: answers.clan ? { optionId: answers.clan.id } : undefined,
+      heritage: answers.heritage ? { status: { optionId: answers.heritage.id } } : undefined,
+      bloodline: answers.bloodline ? { trait: { optionId: answers.bloodline.id } } : undefined,
+      dojutsu: answers.dojutsu ? { eye: { optionId: answers.dojutsu.id } } : undefined,
+      chakra: answers.chakra ? { primary: { optionId: answers.chakra.id } } : undefined,
+      rank: answers.rank ? { rank: { optionId: answers.rank.id } } : undefined,
+    };
+
+    const results = evaluateConditionalSpins(draft as any, conditionalSpins);
+    setConditionalSpinStates(
+      results.map((r) => {
+        const def = conditionalSpins.find((d) => d.id === r.spinId);
+        return {
+          spinId: r.spinId,
+          state: r.state,
+          label: def?.name ?? r.spinId,
+          unlockReason: r.state === 'available' ? def?.explanation : r.state === 'locked' ? def?.prerequisites.map((p) => p.message).join(' · ') : undefined,
+        };
+      })
+    );
+  }, [answers, conditionalSpins]);
 
   const wheelOptions = useMemo(() => {
     switch (stageKey) {
@@ -419,6 +452,60 @@ export default function GeneratorPage() {
     setSpinning(false);
     setPending(null);
   }, [pending, stageKey]);
+
+  const handleConditionalSpin = useCallback(async (spinId: string) => {
+    if (conditionalSpinning || conditionalResults[spinId]) return;
+
+    const def = conditionalSpins.find((d) => d.id === spinId);
+    if (!def) return;
+
+    setConditionalSpinning(spinId);
+
+    try {
+      const rng = new SeededRandom(`cond-${spinId}-${Date.now()}-${Math.random()}`);
+      const allOptions = [...eras, ...alignments, ...villages, ...clans, ...heritageStatuses, ...bloodlineTraits, ...dojutsu, ...chakraNatures, ...affiliations, ...fightingStyles, ...summonings, ...ranks, ...personalities, ...weaknesses, ...fates, ...titles, ...reputations];
+      const result = spinConditionalSpin(def, {} as any, rng, allOptions as SpinOption[]);
+
+      if ('error' in result) {
+        setError(result.error);
+        setConditionalSpinning(null);
+        return;
+      }
+
+      setConditionalResults((prev) => ({ ...prev, [spinId]: result.option }));
+
+      // Evaluate results to update states
+      const draft: Record<string, any> = {
+        era: answers.era ? { optionId: answers.era.id } : undefined,
+        alignment: answers.alignment ? { optionId: answers.alignment.id } : undefined,
+        origin: answers.village ? { birthplace: { optionId: answers.village.id } } : undefined,
+        clan: answers.clan ? { optionId: answers.clan.id } : undefined,
+        heritage: answers.heritage ? { status: { optionId: answers.heritage.id } } : undefined,
+        bloodline: answers.bloodline ? { trait: { optionId: answers.bloodline.id } } : undefined,
+        dojutsu: answers.dojutsu ? { eye: { optionId: answers.dojutsu.id } } : undefined,
+        chakra: answers.chakra ? { primary: { optionId: answers.chakra.id } } : undefined,
+        rank: answers.rank ? { rank: { optionId: answers.rank.id } } : undefined,
+      };
+
+      const results = evaluateConditionalSpins(draft as any, conditionalSpins);
+      setConditionalSpinStates(
+        results.map((r) => {
+          const d = conditionalSpins.find((d2) => d2.id === r.spinId);
+          return {
+            spinId: r.spinId,
+            state: r.state,
+            label: d?.name ?? r.spinId,
+            unlockReason: r.state === 'available' ? d?.explanation : r.state === 'locked' ? d?.prerequisites.map((p) => p.message).join(' · ') : undefined,
+          };
+        })
+      );
+
+      setConditionalSpinning(null);
+    } catch (err) {
+      setConditionalSpinning(null);
+      setError(err instanceof Error ? err.message : 'Gagal memutar spin bersyarat.');
+    }
+  }, [answers, conditionalSpinning, conditionalSpins]);
 
   const handleReroll = useCallback(() => {
     if (stageKey === 'name' || stageKey === 'result') return;
@@ -684,6 +771,41 @@ export default function GeneratorPage() {
                 ))}
               </div>
             </>
+          )}
+
+          {conditionalSpinStates.length > 0 && (
+            <section className="card conditional-spins" aria-label="Spin bersyarat">
+              <div className="eyebrow">Spin Bersyarat</div>
+              <h2 className="stage-title">Kemampuan Bersyarat</h2>
+              {conditionalSpinStates.map((spin) => (
+                <div key={spin.spinId} className={`conditional-item state-${spin.state}`}>
+                  <div className="conditional-header">
+                    <span className="conditional-name">{spin.label}</span>
+                    <span className={`conditional-badge state-${spin.state}`}>
+                      {spin.state === 'locked' ? 'Terkunci' : spin.state === 'available' ? 'Tersedia' : 'Selesai'}
+                    </span>
+                  </div>
+                  {spin.unlockReason && (
+                    <p className="conditional-hint">{spin.unlockReason}</p>
+                  )}
+                  {spin.state === 'available' && conditionalResults[spin.spinId] && (
+                    <div className="conditional-result">
+                      <strong>Hasil:</strong> {conditionalResults[spin.spinId].label}
+                    </div>
+                  )}
+                  {spin.state === 'available' && !conditionalResults[spin.spinId] && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => handleConditionalSpin(spin.spinId)}
+                      disabled={conditionalSpinning === spin.spinId}
+                    >
+                      {conditionalSpinning === spin.spinId ? 'Berputar…' : 'Putar'}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </section>
           )}
 
           {stageKey === 'result' && (

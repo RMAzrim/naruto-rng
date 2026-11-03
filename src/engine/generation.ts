@@ -125,6 +125,7 @@ export function generateCharacter(
     errors: [] as any[],
     warnings: [] as any[],
     infos: [] as any[],
+    canonClassification: 'canon-verified' as const,
   };
 
   const now = new Date().toISOString();

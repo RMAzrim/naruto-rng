@@ -173,6 +173,8 @@ export type ValidationReport = {
   errors: ValidationMessage[];
   warnings: ValidationMessage[];
   infos: ValidationMessage[];
+  /** Overall canon compatibility classification. */
+  canonClassification: 'canon-verified' | 'canon-compatible' | 'au' | 'unverified';
 };
 
 export type ValidationMessage = {

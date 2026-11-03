@@ -43,6 +43,30 @@ export function validateCharacter(
     }
   }
 
+  // Unverified source-status warnings
+  const unverifiedChecks = [
+    { field: 'era', value: character.era?.sourceStatus },
+    { field: 'alignment', value: character.alignment?.sourceStatus },
+    { field: 'title', value: character.title?.sourceStatus },
+    { field: 'clan', value: character.clan?.sourceStatus },
+    { field: 'heritage', value: character.heritage?.status.sourceStatus },
+    { field: 'bloodline', value: character.bloodline?.sourceStatus },
+    { field: 'dojutsu', value: character.dojutsu?.eye.sourceStatus },
+    { field: 'chakra', value: character.chakra?.primary.sourceStatus },
+    { field: 'birthplace', value: character.origin?.birthplace.sourceStatus },
+    { field: 'rank', value: character.rank?.rank.sourceStatus },
+    { field: 'fighting-style', value: character.fightingStyle?.primary.sourceStatus },
+  ];
+  for (const { field, value } of unverifiedChecks) {
+    if (value === 'unverified') {
+      warnings.push({
+        type: 'warning',
+        field,
+        message: `${field} has unverified lore status.`,
+      });
+    }
+  }
+
   // Dojutsu prerequisites (clan checks)
   if (character.clan && character.dojutsu) {
     const clanId = character.clan.optionId;
@@ -86,6 +110,7 @@ export function validateCharacter(
     errors,
     warnings,
     infos,
+    canonClassification: classifyCanonStatus(character, mode),
   };
 }
 
@@ -132,6 +157,25 @@ function excludesViolated(character: Partial<Character>, rule: CompatibilityRule
 function eraRangeViolated(character: Partial<Character>, rule: CompatibilityRule): boolean {
   const era = character.era;
   if (!era || !rule.eraIds) return false;
+
+  // If rule targets a specific field, only violate when that field matches rule.optionId.
+  if (rule.targetSpinId && rule.optionId) {
+    let targetOptionId: string | undefined;
+    if (rule.targetSpinId === 'dojutsu') {
+      targetOptionId = character.dojutsu?.eye.optionId;
+    } else if (rule.targetSpinId === 'clan') {
+      targetOptionId = character.clan?.optionId;
+    } else if (rule.targetSpinId === 'birthplace') {
+      targetOptionId = character.origin?.birthplace.optionId;
+    } else if (rule.targetSpinId === 'rank') {
+      targetOptionId = character.rank?.rank.optionId;
+    } else if (rule.targetSpinId === 'affiliation') {
+      // Affiliation era checks are handled separately in validateCharacter.
+      return false;
+    }
+    if (targetOptionId === undefined || targetOptionId !== rule.optionId) return false;
+  }
+
   return !rule.eraIds.includes(era.optionId);
 }
 
@@ -175,4 +219,37 @@ function getSpinResult(character: Partial<Character>, spinId: string): any {
     affiliation: character.affiliation?.[0],
   };
   return map[spinId];
+}
+
+function classifyCanonStatus(
+  character: Partial<Character>,
+  mode: GameMode
+): 'canon-verified' | 'canon-compatible' | 'au' | 'unverified' {
+  if (mode === 'au') return 'au';
+
+  const statuses: string[] = [];
+  const add = (s?: string) => { if (s) statuses.push(s); };
+
+  add(character.era?.sourceStatus);
+  add(character.alignment?.sourceStatus);
+  add(character.title?.sourceStatus);
+  add(character.clan?.sourceStatus);
+  add(character.heritage?.status.sourceStatus);
+  add(character.bloodline?.sourceStatus);
+  add(character.dojutsu?.eye.sourceStatus);
+  add(character.chakra?.primary.sourceStatus);
+  add(character.chakra?.secondary?.sourceStatus);
+  add(character.chakra?.combined?.sourceStatus);
+  add(character.origin?.birthplace.sourceStatus);
+  add(character.rank?.rank.sourceStatus);
+  add(character.fightingStyle?.primary.sourceStatus);
+  add(character.fate?.sourceStatus);
+
+  for (const aff of character.affiliation || []) {
+    add(aff.organization.sourceStatus);
+  }
+
+  if (statuses.includes('unverified')) return 'unverified';
+  if (statuses.includes('oc') || statuses.includes('game-original')) return 'canon-compatible';
+  return 'canon-verified';
 }

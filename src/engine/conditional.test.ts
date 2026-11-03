@@ -40,7 +40,7 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
     abilities: [],
     stats: { ninjutsu: 50, taijutsu: 50, genjutsu: 50, kenjutsu: 50, chakraControl: 50, chakraReserves: 50, speed: 50, strength: 50, durability: 50, intelligence: 50, perception: 50, stamina: 50 },
     combatRating: { score: 50, breakdown: {}, explanation: '' },
-    validation: { valid: true, errors: [], warnings: [], infos: [] },
+    validation: { valid: true, errors: [], warnings: [], infos: [], canonClassification: 'canon-verified' },
     history: [],
     ...overrides,
   };

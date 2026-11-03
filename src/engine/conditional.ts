@@ -24,35 +24,39 @@ function prerequisiteMet(
   prereq: { spinId: string; optionId: string }
 ): boolean {
   // Check history entries for a matching generate/reroll action.
-  const historyMatch = character.history.some(
+  const historyMatch = character.history?.some(
     (h) => h.field === prereq.spinId && h.current === prereq.optionId
   );
   if (historyMatch) return true;
 
   // Check top-level character fields by spinId mapping.
   const spinToField: Record<string, (char: Character) => string | undefined> = {
-    era: (c) => c.era.optionId,
-    alignment: (c) => c.alignment.optionId,
-    village: (c) => c.origin.birthplace.optionId,
-    clan: (c) => c.clan.optionId,
-    heritage: (c) => c.heritage.status.optionId,
-    bloodline: (c) => c.bloodline.trait.optionId,
-    dojutsu: (c) => c.dojutsu.eye.optionId,
-    chakra: (c) => c.chakra.primary.optionId,
-    affiliation: (c) => c.affiliation[0]?.organization.optionId,
-    rank: (c) => c.rank.rank.optionId,
-    style: (c) => c.fightingStyle.primary.optionId,
-    summoning: (c) => c.summoning.contract.optionId,
-    personality: (c) => c.personality.primaryTrait,
-    weakness: (c) => c.weaknesses[0]?.id,
-    fate: (c) => c.fate.optionId,
-    title: (c) => c.title.optionId,
-    reputation: (c) => c.reputation.label,
+    era: (c) => c.era?.optionId,
+    alignment: (c) => c.alignment?.optionId,
+    village: (c) => c.origin?.birthplace.optionId,
+    clan: (c) => c.clan?.optionId,
+    heritage: (c) => c.heritage?.status.optionId,
+    bloodline: (c) => c.bloodline?.trait.optionId,
+    dojutsu: (c) => c.dojutsu?.eye.optionId,
+    chakra: (c) => c.chakra?.primary.optionId,
+    affiliation: (c) => c.affiliation?.[0]?.organization.optionId,
+    rank: (c) => c.rank?.rank.optionId,
+    style: (c) => c.fightingStyle?.primary.optionId,
+    summoning: (c) => c.summoning?.contract.optionId,
+    personality: (c) => c.personality?.primaryTrait,
+    weakness: (c) => c.weaknesses?.[0]?.id,
+    fate: (c) => c.fate?.optionId,
+    title: (c) => c.title?.optionId,
+    reputation: (c) => c.reputation?.label,
   };
 
   const getter = spinToField[prereq.spinId];
   if (!getter) return false;
-  return getter(character) === prereq.optionId;
+  try {
+    return getter(character) === prereq.optionId;
+  } catch {
+    return false;
+  }
 }
 
 /**

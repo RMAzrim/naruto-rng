@@ -51,6 +51,13 @@ export interface GenerationSettings {
   fateId?: string;
   titleId?: string;
   reputationId?: string;
+  kekkeiGenkaiId?: string;
+  advancedNatureId?: string;
+  sageModeId?: string;
+  specializationId?: string;
+  signatureWeaponId?: string;
+  chakraTierId?: string;
+  mentorId?: string;
 }
 
 export interface DataContext {
@@ -73,6 +80,13 @@ export interface DataContext {
   weaknesses: SpinOption[];
   fates: SpinOption[];
   reputations: SpinOption[];
+  kekkeiGenkai: SpinOption[];
+  advancedNatures: SpinOption[];
+  sageModes: SpinOption[];
+  specializations: SpinOption[];
+  signatureWeapons: SpinOption[];
+  chakraTiers: SpinOption[];
+  mentors: SpinOption[];
   abilities: Ability[];
   rules: any[];
 }
@@ -122,6 +136,21 @@ export function generateCharacter(
     settings.tailedBeastId,
     settings.jinchurikiMasteryId
   );
+
+  const kekkeiGenkaiOpt = pickOption(data.kekkeiGenkai, rng, settings.kekkeiGenkaiId, undefined, era, mode);
+  const kekkeiGenkai = toSpinResult(kekkeiGenkaiOpt);
+  const advancedNatureOpt = pickOption(data.advancedNatures, rng, settings.advancedNatureId, undefined, era, mode);
+  const advancedNature = toSpinResult(advancedNatureOpt);
+  const sageModeOpt = pickOption(data.sageModes, rng, settings.sageModeId, undefined, era, mode);
+  const sageMode = toSpinResult(sageModeOpt);
+  const specializationOpt = pickOption(data.specializations, rng, settings.specializationId, undefined, era, mode);
+  const specialization = toSpinResult(specializationOpt);
+  const signatureWeaponOpt = pickOption(data.signatureWeapons, rng, settings.signatureWeaponId, undefined, era, mode);
+  const signatureWeapon = toSpinResult(signatureWeaponOpt);
+  const chakraTierOpt = pickOption(data.chakraTiers, rng, settings.chakraTierId, undefined, era, mode);
+  const chakraTier = toSpinResult(chakraTierOpt);
+  const mentorOpt = pickOption(data.mentors, rng, settings.mentorId, undefined, era, mode);
+  const mentor = toSpinResult(mentorOpt);
 
   const affiliationOpt = pickOption(data.affiliations, rng, settings.affiliationId, undefined, era, mode);
   const affiliation = generateAffiliations(data.affiliations, rng, era, mode, settings.affiliationId);
@@ -196,6 +225,13 @@ export function generateCharacter(
     validation,
     woodRelease: chakra.combined?.optionId === 'wood',
     iceRelease: chakra.combined?.optionId === 'ice',
+    kekkeiGenkai,
+    advancedNature,
+    sageMode,
+    specialization,
+    signatureWeapon,
+    chakraTier,
+    mentor,
     history: [
       { action: 'generate', at: now },
     ],

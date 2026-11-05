@@ -1,0 +1,5 @@
+[
+  { "id": "none", "label": "None", "description": "No advanced nature transformation.", "category": "Advanced Nature", "rarity": "Common", "weight": 95, "sourceStatus": "game-original", "tags": ["advanced-nature", "none"] },
+  { "id": "dust-release", "label": "Dust Release", "description": "Kekkei Tōta; combination of Earth, Wind, and Fire; disintegrates matter at molecular level.", "category": "Advanced Nature", "rarity": "Mythic", "weight": 2, "sourceStatus": "canon", "tags": ["advanced-nature", "kekkei-tota", "dust"], "combatEffect": "+25% damage, ignores defense", "buffs": ["Dust Release compatibility", "Earth + Wind + Fire combination"] },
+  { "id": "dark-release", "label": "Dark Release", "description": "Absorbs and manipulates opponent's chakra.", "category": "Advanced Nature", "rarity": "Legendary", "weight": 3, "sourceStatus": "game-original", "tags": ["advanced-nature", "dark"], "combatEffect": "+20% chakra absorption", "buffs": ["Dark Release compatibility", "Chakra absorption"] }
+]

@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
+  advancedNatures,
   bloodlineTraits,
   chakraCounts,
+  chakraTiers,
   clans,
   fightingStyles,
   heritageStatuses,
+  kekkeiGenkai,
+  mentors,
   personalities,
   ranks,
+  sageModes,
+  signatureWeapons,
+  specializations,
   tailedBeasts,
   titles,
   villages,
@@ -25,6 +32,13 @@ const systems: [string, SpinOption[]][] = [
   ['ranks', ranks],
   ['chakra counts', chakraCounts],
   ['tailed beasts', tailedBeasts],
+  ['kekkei genkai', kekkeiGenkai],
+  ['advanced natures', advancedNatures],
+  ['sage modes', sageModes],
+  ['specializations', specializations],
+  ['signature weapons', signatureWeapons],
+  ['chakra tiers', chakraTiers],
+  ['mentors', mentors],
 ];
 
 describe('dataset contract', () => {
@@ -65,5 +79,43 @@ describe('dataset contract', () => {
     expect(tailedBeasts.filter((option) => option.tags?.includes('tailed-beast'))).toHaveLength(9);
     expect(tailedBeasts.filter((option) => option.tags?.includes('mastery'))).toHaveLength(6);
     expect(chakraCounts).toHaveLength(5);
+  });
+
+  it('ships kekkei genkai combination elements', () => {
+    const kgs = kekkeiGenkai.filter((option) => option.tags?.includes('kekkei-genkai'));
+    expect(kgs.length).toBeGreaterThan(0);
+    const wood = kekkeiGenkai.find((k) => k.id === 'wood-release');
+    expect(wood?.prerequisites).toContain('clan-senju');
+    const ice = kekkeiGenkai.find((k) => k.id === 'ice-release');
+    expect(ice?.prerequisites).toContain('clan-yuki');
+  });
+
+  it('ships advanced nature / kekkei tota options', () => {
+    const dust = advancedNatures.find((a) => a.id === 'dust-release');
+    expect(dust?.rarity).toBe('Mythic');
+    const none = advancedNatures.find((a) => a.id === 'none');
+    expect(none).toBeDefined();
+  });
+
+  it('ships sage mode options', () => {
+    const sixPaths = sageModes.find((s) => s.id === 'six-paths-sage');
+    expect(sixPaths?.rarity).toBe('Mythic');
+    const none = sageModes.find((s) => s.id === 'none');
+    expect(none).toBeDefined();
+  });
+
+  it('ships specialization, weapon, tier, and mentor options', () => {
+    expect(specializations.length).toBeGreaterThan(0);
+    expect(signatureWeapons.length).toBeGreaterThan(0);
+    expect(chakraTiers.length).toBeGreaterThan(0);
+    expect(mentors.length).toBeGreaterThan(0);
+    const medical = specializations.find((s) => s.id === 'medical-nin');
+    expect(medical).toBeDefined();
+    const katana = signatureWeapons.find((w) => w.id === 'katana');
+    expect(katana).toBeDefined();
+    const perfect = chakraTiers.find((t) => t.id === 'perfect-control');
+    expect(perfect?.rarity).toBe('Epic');
+    const sageDisciple = mentors.find((m) => m.id === 'sage-disciple');
+    expect(sageDisciple?.rarity).toBe('Epic');
   });
 });

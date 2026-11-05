@@ -150,6 +150,15 @@ export default function CharacterPage() {
             {character.rinneganPath && (
               <div><strong>Rinnegan path:</strong> {character.rinneganPath}</div>
             )}
+            {character.kekkeiGenkai && character.kekkeiGenkai.optionId !== 'none' && (
+              <div><strong>Kekkei Genkai:</strong> {character.kekkeiGenkai.label}</div>
+            )}
+            {character.advancedNature && character.advancedNature.optionId !== 'none' && (
+              <div><strong>Nature Advanced:</strong> {character.advancedNature.label}</div>
+            )}
+            {character.sageMode && character.sageMode.optionId !== 'none' && (
+              <div><strong>Sage Mode:</strong> {character.sageMode.label}</div>
+            )}
             <div>
               <strong>Chakra:</strong> {character.chakra.natureCount ?? 1} elemen ·{' '}
               {character.chakra.primary.label}
@@ -172,6 +181,18 @@ export default function CharacterPage() {
                   .filter(Boolean)
                   .join(' · ')}
               </div>
+            )}
+            {character.specialization && character.specialization.optionId !== 'none' && (
+              <div><strong>Spesialisasi:</strong> {character.specialization.label}</div>
+            )}
+            {character.signatureWeapon && character.signatureWeapon.optionId !== 'none' && (
+              <div><strong>Senjata Khusus:</strong> {character.signatureWeapon.label}</div>
+            )}
+            {character.chakraTier && character.chakraTier.optionId !== 'none' && (
+              <div><strong>Tingkat Chakra:</strong> {character.chakraTier.label}</div>
+            )}
+            {character.mentor && character.mentor.optionId !== 'none' && (
+              <div><strong>Mentor / Jabatan:</strong> {character.mentor.label}</div>
             )}
             <div><strong>Gaya:</strong> {character.fightingStyle.primary.label}</div>
             <div><strong>Summoning:</strong> {character.summoning.contract.label} ({character.summoning.proficiency})</div>

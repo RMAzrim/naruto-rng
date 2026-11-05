@@ -244,4 +244,80 @@ describe('generateCharacter', () => {
       expect(natures).toContain('wind');
     }
   });
+
+  it('rolls kekkei genkai, advanced nature, sage mode, specialization, weapon, tier, and mentor', () => {
+    // Kekkei Genkai with explicit override
+    const wood = generateCharacter(
+      { ...baseSettings, seed: 'kg-wood', kekkeiGenkaiId: 'wood-release' },
+      dataContext
+    );
+    expect(wood.kekkeiGenkai?.optionId).toBe('wood-release');
+
+    const none = generateCharacter(
+      { ...baseSettings, seed: 'kg-none' },
+      dataContext
+    );
+    expect(none.kekkeiGenkai).toBeDefined();
+
+    // Advanced Nature
+    const dust = generateCharacter(
+      { ...baseSettings, seed: 'adv-dust', advancedNatureId: 'dust-release' },
+      dataContext
+    );
+    expect(dust.advancedNature?.optionId).toBe('dust-release');
+
+    // Sage Mode
+    const sage = generateCharacter(
+      { ...baseSettings, seed: 'sage-toad', sageModeId: 'toad-sage' },
+      dataContext
+    );
+    expect(sage.sageMode?.optionId).toBe('toad-sage');
+
+    // Specialization
+    const med = generateCharacter(
+      { ...baseSettings, seed: 'spec-med', specializationId: 'medical-nin' },
+      dataContext
+    );
+    expect(med.specialization?.optionId).toBe('medical-nin');
+
+    // Signature Weapon
+    const katana = generateCharacter(
+      { ...baseSettings, seed: 'wp-katana', signatureWeaponId: 'katana' },
+      dataContext
+    );
+    expect(katana.signatureWeapon?.optionId).toBe('katana');
+
+    // Chakra Tier
+    const tier = generateCharacter(
+      { ...baseSettings, seed: 'ct-perfect', chakraTierId: 'perfect-control' },
+      dataContext
+    );
+    expect(tier.chakraTier?.optionId).toBe('perfect-control');
+
+    // Mentor
+    const mentor = generateCharacter(
+      { ...baseSettings, seed: 'mt-sage', mentorId: 'sage-disciple' },
+      dataContext
+    );
+    expect(mentor.mentor?.optionId).toBe('sage-disciple');
+  });
+
+  it('kekkei genkai wood requires senju clan in generation override', () => {
+    // When clan override is senju and kekkei genkai is wood, generation should accept it
+    const char = generateCharacter(
+      { ...baseSettings, seed: 'kg-senju', clanId: 'senju', kekkeiGenkaiId: 'wood-release' },
+      dataContext
+    );
+    expect(char.clan.optionId).toBe('senju');
+    expect(char.kekkeiGenkai?.optionId).toBe('wood-release');
+  });
+
+  it('ice kekkei genkai requires yuki clan in generation override', () => {
+    const char = generateCharacter(
+      { ...baseSettings, seed: 'kg-yuki', clanId: 'yuki', kekkeiGenkaiId: 'ice-release' },
+      dataContext
+    );
+    expect(char.clan.optionId).toBe('yuki');
+    expect(char.kekkeiGenkai?.optionId).toBe('ice-release');
+  });
 });

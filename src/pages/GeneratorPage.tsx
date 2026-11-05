@@ -15,18 +15,25 @@ import { useTheme, type DataMode } from '@/theme/ThemeContext';
 import {
   alignments,
   affiliations,
+  advancedNatures,
   bloodlineTraits,
   chakraCounts,
   chakraNatures,
+  chakraTiers,
   clans,
   dojutsu,
   eras,
   fightingStyles,
   fates,
   heritageStatuses,
+  kekkeiGenkai,
+  mentors,
   personalities,
   ranks,
   reputations,
+  sageModes,
+  signatureWeapons,
+  specializations,
   summonings,
   tailedBeasts,
   titles,
@@ -46,11 +53,17 @@ type StageKey =
   | 'dojutsu'
   | 'chakraCount'
   | 'chakra'
+  | 'kekkeiGenkai'
+  | 'advancedNature'
+  | 'sageMode'
   | 'jinchuriki'
   | 'tailedBeast'
   | 'jinchurikiMastery'
+  | 'chakraTier'
   | 'affiliation'
   | 'rank'
+  | 'specialization'
+  | 'signatureWeapon'
   | 'style'
   | 'summoning'
   | 'personality'
@@ -58,6 +71,7 @@ type StageKey =
   | 'fate'
   | 'title'
   | 'reputation'
+  | 'mentor'
   | 'result';
 type SpinStageKey = Exclude<StageKey, 'name' | 'result'>;
 
@@ -82,11 +96,17 @@ const STAGE_ORDER: StageKey[] = [
   'dojutsu',
   'chakraCount',
   'chakra',
+  'kekkeiGenkai',
+  'advancedNature',
+  'sageMode',
   'jinchuriki',
   'tailedBeast',
   'jinchurikiMastery',
+  'chakraTier',
   'affiliation',
   'rank',
+  'specialization',
+  'signatureWeapon',
   'style',
   'summoning',
   'personality',
@@ -94,6 +114,7 @@ const STAGE_ORDER: StageKey[] = [
   'fate',
   'title',
   'reputation',
+  'mentor',
   'result',
 ];
 
@@ -171,7 +192,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: chakraCounts,
   },
   chakra: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 4/9',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 4/13',
     title: 'Elemen Chakra',
     category: 'Chakra',
     prompt: 'Elemen chakra primer apa yang kamu miliki?',
@@ -179,8 +200,35 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'elemen chakra',
     options: chakraNatures.filter((option) => option.tags?.includes('basic')),
   },
+  kekkeiGenkai: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 5/13',
+    title: 'Kekkei Genkai',
+    category: 'Kekkei Genkai',
+    prompt: 'Kombinasi elemen apa yang dimiliki darahmu?',
+    hint: 'Kekkei genkai adalah kemampuan bawaan yang menggabungkan dua elemen. Kebanyakan shinobi tidak memilikinya.',
+    noun: 'kekkei genkai',
+    options: kekkeiGenkai,
+  },
+  advancedNature: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 6/13',
+    title: 'Nature Advanced',
+    category: 'Advanced Nature',
+    prompt: 'Apakah kamu memiliki transformasi elemen lanjutan?',
+    hint: 'Kekkei Tōta sangat jarang, hanya dimiliki oleh sedikit shinobi legendaris.',
+    noun: 'nature advanced',
+    options: advancedNatures,
+  },
+  sageMode: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 7/13',
+    title: 'Sage Mode',
+    category: 'Sage Mode',
+    prompt: 'Apakah kamu bisa masuk Sage Mode?',
+    hint: 'Senjutsu memerlukan pelatihan ekstra dan cadangan chakra yang besar.',
+    noun: 'sage mode',
+    options: sageModes,
+  },
   jinchuriki: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 5/9',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 8/13',
     title: 'Jinchuriki',
     category: 'Jinchuriki',
     prompt: 'Apakah kamu adalah jinchuriki (penampung biju)?',
@@ -189,7 +237,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: tailedBeasts.filter((option) => option.tags?.includes('jinchuriki')),
   },
   tailedBeast: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 6/9',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 9/13',
     title: 'Kompatibilitas Biju',
     category: 'Biju',
     prompt: 'Biju mana yang kompatibel denganmu?',
@@ -198,7 +246,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: tailedBeasts.filter((option) => option.tags?.includes('tailed-beast')),
   },
   jinchurikiMastery: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 7/9',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 10/13',
     title: 'Penguasaan Jinchuriki',
     category: 'Penguasaan Jinchuriki',
     prompt: 'Seberapa baik kamu mengendalikan biju?',
@@ -206,8 +254,17 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'penguasaan',
     options: tailedBeasts.filter((option) => option.tags?.includes('mastery')),
   },
+  chakraTier: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 11/13',
+    title: 'Tingkat Chakra',
+    category: 'Chakra Tier',
+    prompt: 'Seberapa besar cadangan dan kontrol chakramu?',
+    hint: 'Tingkat chakra memengaruhi kemampuan bertahan dan jumlah jutsu yang bisa digunakan.',
+    noun: 'tingkat chakra',
+    options: chakraTiers,
+  },
   affiliation: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 8/9',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 12/13',
     title: 'Afiliasi',
     category: 'Afiliasi',
     prompt: 'Organisasi mana yang terkait denganmu?',
@@ -216,7 +273,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: affiliations,
   },
   rank: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 9/9',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 13/13',
     title: 'Ranga',
     category: 'Ranga',
     prompt: 'Sejauh mana reputasi militermu?',
@@ -224,8 +281,26 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'ranga',
     options: ranks,
   },
+  specialization: {
+    eyebrow: 'Tahap 05 · Peran & Alat · 1/4',
+    title: 'Spesialisasi',
+    category: 'Spesialisasi',
+    prompt: 'Apa peran spesialismu dalam tim?',
+    hint: 'Spesialisasi memberi kemampuan tambahan di luar gaya bertarung utama.',
+    noun: 'spesialisasi',
+    options: specializations,
+  },
+  signatureWeapon: {
+    eyebrow: 'Tahap 05 · Peran & Alat · 2/4',
+    title: 'Senjata Khusus',
+    category: 'Signature Weapon',
+    prompt: 'Senjata ikonik apa yang menjadi ciri khasmu?',
+    hint: 'Senjata khusus menentukan teknik dasar dan keuntungan pertempuran.',
+    noun: 'senjata khusus',
+    options: signatureWeapons,
+  },
   style: {
-    eyebrow: 'Tahap 05 · Gaya & Summoning · 1/2',
+    eyebrow: 'Tahap 05 · Peran & Alat · 3/4',
     title: 'Gaya bertarung',
     category: 'Gaya bertarung',
     prompt: 'Bagaimana kamu menghadapi lawan?',
@@ -234,7 +309,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: fightingStyles,
   },
   summoning: {
-    eyebrow: 'Tahap 05 · Gaya & Summoning · 2/2',
+    eyebrow: 'Tahap 05 · Peran & Alat · 4/4',
     title: 'Perintah Hewan',
     category: 'Perintah Hewan',
     prompt: 'Apakah kamu punya kontrak perintah hewan?',
@@ -270,7 +345,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: fates,
   },
   title: {
-    eyebrow: 'Tahap 07 · Gelar & Reputasi · 1/2',
+    eyebrow: 'Tahap 07 · Gelar & Reputasi · 1/3',
     title: 'Gelar',
     category: 'Gelar',
     prompt: 'Gelar mana yang cocok untukmu?',
@@ -279,7 +354,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: titles,
   },
   reputation: {
-    eyebrow: 'Tahap 07 · Gelar & Reputasi · 2/2',
+    eyebrow: 'Tahap 07 · Gelar & Reputasi · 2/3',
     title: 'Reputasi',
     category: 'Reputasi',
     prompt: 'Bagaimana dunia memandangmu?',
@@ -287,16 +362,25 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'reputasi',
     options: reputations,
   },
+  mentor: {
+    eyebrow: 'Tahap 07 · Gelar & Reputasi · 3/3',
+    title: 'Mentor & Jabatan',
+    category: 'Mentor',
+    prompt: 'Siapa yang melatihmu, atau apa jabatanmu?',
+    hint: 'Mentor dan jabatan memberikan kaitan naratif dan buff spesifik.',
+    noun: 'mentor',
+    options: mentors,
+  },
 };
 
 const GROUPS: { id: string; label: string; keys: StageKey[] }[] = [
   { id: 'name', label: 'Nama', keys: ['name'] },
   { id: 'era', label: 'Era', keys: ['era', 'alignment'] },
   { id: 'village', label: 'Asal & Desa', keys: ['village', 'clan', 'heritage'] },
-  { id: 'power', label: 'Kekuatan', keys: ['bloodline', 'dojutsu', 'chakraCount', 'chakra', 'jinchuriki', 'tailedBeast', 'jinchurikiMastery', 'affiliation', 'rank'] },
+  { id: 'power', label: 'Kekuatan', keys: ['bloodline', 'dojutsu', 'chakraCount', 'chakra', 'kekkeiGenkai', 'advancedNature', 'sageMode', 'jinchuriki', 'tailedBeast', 'jinchurikiMastery', 'chakraTier', 'affiliation', 'rank', 'specialization', 'signatureWeapon'] },
   { id: 'style', label: 'Gaya & Hewan', keys: ['style', 'summoning'] },
   { id: 'character', label: 'Kepribadian', keys: ['personality', 'weakness', 'fate'] },
-  { id: 'title', label: 'Gelar', keys: ['title', 'reputation'] },
+  { id: 'title', label: 'Gelar', keys: ['title', 'reputation', 'mentor'] },
   { id: 'result', label: 'Hasil', keys: ['result'] },
 ];
 
@@ -445,6 +529,12 @@ export default function GeneratorPage() {
         return filter(STAGES.chakraCount.options);
       case 'chakra':
         return filter(STAGES.chakra.options);
+      case 'kekkeiGenkai':
+        return filter(STAGES.kekkeiGenkai.options);
+      case 'advancedNature':
+        return filter(STAGES.advancedNature.options);
+      case 'sageMode':
+        return filter(STAGES.sageMode.options);
       case 'jinchuriki':
         return filter(STAGES.jinchuriki.options);
       case 'tailedBeast': {
@@ -458,10 +548,16 @@ export default function GeneratorPage() {
         if (!jinOpt || jinOpt.id !== 'jinchuriki-yes' || !tbOpt) return [];
         return filter(STAGES.jinchurikiMastery.options);
       }
+      case 'chakraTier':
+        return filter(STAGES.chakraTier.options);
       case 'affiliation':
         return filter(STAGES.affiliation.options);
       case 'rank':
         return filter(STAGES.rank.options);
+      case 'specialization':
+        return filter(STAGES.specialization.options);
+      case 'signatureWeapon':
+        return filter(STAGES.signatureWeapon.options);
       case 'style':
         return filter(STAGES.style.options);
       case 'summoning':
@@ -476,6 +572,8 @@ export default function GeneratorPage() {
         return filter(STAGES.title.options);
       case 'reputation':
         return filter(STAGES.reputation.options);
+      case 'mentor':
+        return filter(STAGES.mentor.options);
       default:
         return [];
     }
@@ -499,7 +597,7 @@ export default function GeneratorPage() {
     if (name.trim() && stageKey !== 'name') {
       rows.push({ category: 'Nama', result: name.trim() });
     }
-    (['era', 'alignment', 'village', 'clan', 'heritage', 'bloodline', 'dojutsu', 'chakraCount', 'chakra', 'jinchuriki', 'tailedBeast', 'jinchurikiMastery', 'affiliation', 'rank', 'style', 'summoning', 'personality', 'weakness', 'fate', 'title', 'reputation'] as SpinStageKey[]).forEach((key) => {
+    (['era', 'alignment', 'village', 'clan', 'heritage', 'bloodline', 'dojutsu', 'chakraCount', 'chakra', 'kekkeiGenkai', 'advancedNature', 'sageMode', 'jinchuriki', 'tailedBeast', 'jinchurikiMastery', 'chakraTier', 'affiliation', 'rank', 'specialization', 'signatureWeapon', 'style', 'summoning', 'personality', 'weakness', 'fate', 'title', 'reputation', 'mentor'] as SpinStageKey[]).forEach((key) => {
       const answer = answers[key];
       if (answer) rows.push({ category: STAGES[key].category, result: answer.label });
     });
@@ -622,9 +720,9 @@ export default function GeneratorPage() {
     const index = STAGE_ORDER.indexOf(stageKey);
     if (index < 0 || index >= STAGE_ORDER.length - 1) return;
     let next = STAGE_ORDER[index + 1];
-    // Non-jinchuriki skip both the biju compatibility and mastery spins.
+    // Non-jinchuriki skip tailedBeast and jinchurikiMastery, but still go to chakraTier.
     if (stageKey === 'jinchuriki' && answers.jinchuriki?.id !== 'jinchuriki-yes') {
-      next = 'affiliation';
+      next = 'chakraTier';
     }
     setStageKey(next);
   }, [answers.jinchuriki, stageKey]);
@@ -661,6 +759,13 @@ export default function GeneratorPage() {
           fateId: answers.fate?.id,
           titleId: answers.title?.id,
           reputationId: answers.reputation?.id,
+          kekkeiGenkaiId: answers.kekkeiGenkai?.id,
+          advancedNatureId: answers.advancedNature?.id,
+          sageModeId: answers.sageMode?.id,
+          specializationId: answers.specialization?.id,
+          signatureWeaponId: answers.signatureWeapon?.id,
+          chakraTierId: answers.chakraTier?.id,
+          mentorId: answers.mentor?.id,
         },
         dataContext
       );
@@ -951,15 +1056,44 @@ export default function GeneratorPage() {
                     <span>{character.chakra.natureCount} elemen</span>
                     <span>{character.chakra.primary.label}</span>
                     <span>{character.dojutsu.eye.label}</span>
+                    {character.kekkeiGenkai && character.kekkeiGenkai.optionId !== 'none' && (
+                      <span>{character.kekkeiGenkai.label}</span>
+                    )}
+                    {character.advancedNature && character.advancedNature.optionId !== 'none' && (
+                      <span>{character.advancedNature.label}</span>
+                    )}
+                    {character.sageMode && character.sageMode.optionId !== 'none' && (
+                      <span>{character.sageMode.label}</span>
+                    )}
                     {character.jinchuriki.isJinchuriki && character.jinchuriki.tailedBeast && (
                       <span>{character.jinchuriki.tailedBeast.label}</span>
                     )}
                   </div>
 
+                  {character.kekkeiGenkai && character.kekkeiGenkai.optionId !== 'none' && (
+                    <p className="hint">
+                      Kekkei Genkai: {character.kekkeiGenkai.label}
+                    </p>
+                  )}
+                  {character.advancedNature && character.advancedNature.optionId !== 'none' && (
+                    <p className="hint">
+                      Nature Advanced: {character.advancedNature.label}
+                    </p>
+                  )}
+                  {character.sageMode && character.sageMode.optionId !== 'none' && (
+                    <p className="hint">
+                      Sage Mode: {character.sageMode.label}
+                    </p>
+                  )}
                   {character.jinchuriki.isJinchuriki && (
                     <p className="hint">
                       Jinchuriki: {character.jinchuriki.tailedBeast?.label ?? '—'} · Penguasaan:{' '}
                       {character.jinchuriki.mastery?.label ?? '—'}
+                    </p>
+                  )}
+                  {character.chakraTier && character.chakraTier.optionId !== 'none' && (
+                    <p className="hint">
+                      Tingkat Chakra: {character.chakraTier.label}
                     </p>
                   )}
 
@@ -1141,6 +1275,13 @@ export default function GeneratorPage() {
             <span>{eligible(fates, mode).length} takdir</span>
             <span>{eligible(titles, mode).length} gelar</span>
             <span>{eligible(reputations, mode).length} reputasi</span>
+            <span>{eligible(kekkeiGenkai, mode).length} kekkei genkai</span>
+            <span>{eligible(advancedNatures, mode).length} nature advanced</span>
+            <span>{eligible(sageModes, mode).length} sage mode</span>
+            <span>{eligible(chakraTiers, mode).length} tingkat chakra</span>
+            <span>{eligible(specializations, mode).length} spesialisasi</span>
+            <span>{eligible(signatureWeapons, mode).length} senjata khusus</span>
+            <span>{eligible(mentors, mode).length} mentor</span>
           </div>
         </details>
       </div>

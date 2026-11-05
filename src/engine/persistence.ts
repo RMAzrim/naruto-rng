@@ -250,6 +250,15 @@ function migrateCharacter(c: any): Character {
     },
     combatRating: c.combatRating || { score: 50, breakdown: {}, explanation: '' },
     validation: c.validation || { valid: true, errors: [], warnings: [], infos: [] },
+    woodRelease: c.woodRelease ?? false,
+    iceRelease: c.iceRelease ?? false,
+    kekkeiGenkai: c.kekkeiGenkai ?? null,
+    advancedNature: c.advancedNature ?? null,
+    sageMode: c.sageMode ?? null,
+    specialization: c.specialization ?? null,
+    signatureWeapon: c.signatureWeapon ?? null,
+    chakraTier: c.chakraTier ?? null,
+    mentor: c.mentor ?? null,
     history: c.history || [],
   };
 }

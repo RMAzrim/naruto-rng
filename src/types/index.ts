@@ -242,6 +242,13 @@ export type Character = {
   rinneganPath?: 'deva' | 'asura' | 'human' | 'animal' | 'preta' | null;
   woodRelease?: boolean;
   iceRelease?: boolean;
+  kekkeiGenkai?: SpinResult | null;
+  advancedNature?: SpinResult | null;
+  sageMode?: SpinResult | null;
+  specialization?: SpinResult | null;
+  signatureWeapon?: SpinResult | null;
+  chakraTier?: SpinResult | null;
+  mentor?: SpinResult | null;
 };
 
 export type Collection = {

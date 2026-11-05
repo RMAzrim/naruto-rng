@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { simulateBattle } from './battle';
+import { computeBattleAbilityMods } from './battle-abilities';
 
 function makeChar(overrides: any = {}) {
   const base = {
@@ -20,6 +21,7 @@ function makeChar(overrides: any = {}) {
     rinneganPath: null,
     woodRelease: false,
     iceRelease: false,
+    jinchuriki: { isJinchuriki: false, tailedBeast: null, mastery: null },
     ...overrides,
   };
   return base as any;
@@ -99,6 +101,24 @@ describe('simulateBattle', () => {
       const resisted = genjutsuEvents.some((e) => e.result === 'Resisted');
       expect(resisted).toBe(true);
     }
+  });
+
+  it('jinchuriki mastery adds damage, chakra, and defense modifiers', () => {
+    const beast = { optionId: 'kurama', label: 'Kurama (Nine Tails)', rarity: 'Mythic' as const };
+    const mastery = { optionId: 'mastery-perfect', label: 'Perfect Control', rarity: 'Legendary' as const };
+    const base = makeChar({ id: 'a', name: 'Base' });
+    const jinchuriki = makeChar({
+      id: 'b',
+      name: 'Jinchuriki',
+      jinchuriki: { isJinchuriki: true, tailedBeast: beast, mastery },
+    });
+    const baseMods = computeBattleAbilityMods(base);
+    const jinchurikiMods = computeBattleAbilityMods(jinchuriki);
+    expect(jinchurikiMods.damageBonus).toBeGreaterThan(baseMods.damageBonus);
+    expect(jinchurikiMods.chakraCostReduction).toBeGreaterThan(baseMods.chakraCostReduction);
+    expect(jinchurikiMods.damageReduction).toBeGreaterThan(baseMods.damageReduction);
+    expect(jinchurikiMods.specialActions).toContain('jinchuriki-kurama');
+    expect(jinchurikiMods.specialActions).toContain('biju-mastery-mastery-perfect');
   });
 
   it('sharingan three tomoe boosts accuracy/perception in battle mods', () => {

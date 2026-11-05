@@ -132,6 +132,81 @@ describe('generateCharacter', () => {
     expect(foundCount2Plus).toBe(true);
   });
 
+  it('uses the exact staged chakra nature count', () => {
+    for (const count of [1, 2, 3, 4, 5]) {
+      const char = generateCharacter(
+        { ...baseSettings, seed: `exact-count-${count}`, chakraCountId: `count-${count}` },
+        dataContext
+      );
+      expect(char.chakra.natureCount).toBe(count);
+      const possessed = [
+        char.chakra.primary,
+        ...(char.chakra.secondary ? [char.chakra.secondary] : []),
+        ...char.chakra.additional,
+      ];
+      expect(new Set(possessed.map((nature) => nature.optionId)).size).toBe(count);
+    }
+  });
+
+  it('only rolls village-appropriate clans', () => {
+    for (let i = 0; i < 40; i += 1) {
+      const char = generateCharacter(
+        { ...baseSettings, seed: `village-clan-${i}`, villageId: 'suna' },
+        dataContext
+      );
+      expect(['kazekage-lineage', 'clanless', 'oc-clan', 'iburi', 'otsutsuki']).toContain(
+        char.clan.optionId
+      );
+    }
+
+    const kiri = generateCharacter(
+      { ...baseSettings, seed: 'kiri-clan', villageId: 'kiri', clanId: 'yuki' },
+      dataContext
+    );
+    expect(kiri.clan.optionId).toBe('yuki');
+    expect(kiri.origin.birthplace.optionId).toBe('kiri');
+
+    const uzushio = generateCharacter(
+      { ...baseSettings, seed: 'uzushio-clan', villageId: 'uzushio', clanId: 'uzumaki' },
+      dataContext
+    );
+    expect(uzushio.clan.optionId).toBe('uzumaki');
+    expect(uzushio.origin.birthplace.optionId).toBe('uzushio');
+  });
+
+  it('keeps a clan override consistent with its home village', () => {
+    const char = generateCharacter(
+      { ...baseSettings, seed: 'clan-village-fix', villageId: 'suna', clanId: 'uchiha' },
+      dataContext
+    );
+    expect(char.clan.optionId).toBe('uchiha');
+    expect(char.origin.birthplace.optionId).toBe('konoha');
+  });
+
+  it('supports the full jinchuriki chain', () => {
+    const notJinchuriki = generateCharacter(
+      { ...baseSettings, seed: 'no-biju', jinchurikiId: 'jinchuriki-no' },
+      dataContext
+    );
+    expect(notJinchuriki.jinchuriki.isJinchuriki).toBe(false);
+    expect(notJinchuriki.jinchuriki.tailedBeast).toBeNull();
+    expect(notJinchuriki.jinchuriki.mastery).toBeNull();
+
+    const jinchuriki = generateCharacter(
+      {
+        ...baseSettings,
+        seed: 'nine-tails',
+        jinchurikiId: 'jinchuriki-yes',
+        tailedBeastId: 'kurama',
+        jinchurikiMasteryId: 'mastery-perfect',
+      },
+      dataContext
+    );
+    expect(jinchuriki.jinchuriki.isJinchuriki).toBe(true);
+    expect(jinchuriki.jinchuriki.tailedBeast?.optionId).toBe('kurama');
+    expect(jinchuriki.jinchuriki.mastery?.optionId).toBe('mastery-perfect');
+  });
+
   it('combined nature wood requires senju clan + earth + water', () => {
     const char = generateCharacter(
       {

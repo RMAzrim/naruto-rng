@@ -10,11 +10,13 @@ import bloodlineRaw from './bloodline-traits.json';
 import dojutsuRaw from './dojutsu.json';
 import conditionalSpinsRaw from './conditional-spins.json';
 import chakraRaw from './chakra-natures.json';
+import chakraCountsRaw from './chakra-counts.json';
 import fightingStylesRaw from './fighting-styles.json';
 import personalitiesRaw from './personalities.json';
 import weaknessesRaw from './weaknesses.json';
 import affiliationsRaw from './affiliations.json';
 import summoningsRaw from './summonings.json';
+import tailedBeastsRaw from './tailed-beasts.json';
 import ranksRaw from './ranks.json';
 import fatesRaw from './fates.json';
 import reputationsRaw from './reputations.json';
@@ -31,6 +33,7 @@ function toSpinOption(raw: any, idField: string = 'id'): SpinOption {
     sourceStatus: raw.sourceStatus ?? 'game-original',
     description: raw.description,
     eraEligibility: raw.eraEligibility,
+    villages: raw.villages,
     prerequisites: raw.prerequisites,
     exclusions: raw.exclusions,
     tags: raw.tags,
@@ -50,11 +53,13 @@ export const bloodlineTraits: SpinOption[] = bloodlineRaw.map((r) => toSpinOptio
 export const dojutsu: SpinOption[] = dojutsuRaw.map((r) => toSpinOption(r));
 export const conditionalSpins: ConditionalSpinDefinition[] = conditionalSpinsRaw as unknown as ConditionalSpinDefinition[];
 export const chakraNatures: SpinOption[] = chakraRaw.map((r) => toSpinOption(r));
+export const chakraCounts: SpinOption[] = chakraCountsRaw.map((r) => toSpinOption(r));
 export const fightingStyles: SpinOption[] = fightingStylesRaw.map((r) => toSpinOption(r));
 export const personalities: SpinOption[] = personalitiesRaw.map((r) => toSpinOption(r));
 export const weaknesses: SpinOption[] = weaknessesRaw.map((r) => toSpinOption(r));
 export const affiliations: SpinOption[] = affiliationsRaw.map((r) => toSpinOption(r));
 export const summonings: SpinOption[] = summoningsRaw.map((r) => toSpinOption(r));
+export const tailedBeasts: SpinOption[] = tailedBeastsRaw.map((r) => toSpinOption(r));
 export const ranks: SpinOption[] = ranksRaw.map((r) => toSpinOption(r));
 export const fates: SpinOption[] = fatesRaw.map((r) => toSpinOption(r));
 export const reputations: SpinOption[] = reputationsRaw.map((r) => toSpinOption(r));

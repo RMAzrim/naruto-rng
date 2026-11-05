@@ -196,12 +196,24 @@ function migrateCharacter(c: any): Character {
       limitations: [],
       sourceStatus: 'game-original',
     },
-    chakra: c.chakra || {
-      primary: { spinId: 'unknown', optionId: 'unknown', label: 'Unknown', rarity: 'Common', sourceStatus: 'game-original' },
-      secondary: null,
-      combined: null,
-      control: 50,
-      reserves: 50,
+    // Field-level migration keeps characters saved before these fields existed loadable.
+    // Preserve saved characters created before natureCount existed by counting
+    // the natures actually stored, rather than defaulting everyone to one element.
+    chakra: {
+      natureCount: c.chakra?.natureCount ?? (1 + (c.chakra?.secondary ? 1 : 0) + (c.chakra?.additional?.length ?? 0)),
+      primary: c.chakra?.primary || {
+        spinId: 'unknown', optionId: 'unknown', label: 'Unknown', rarity: 'Common', sourceStatus: 'game-original',
+      },
+      secondary: c.chakra?.secondary ?? null,
+      additional: c.chakra?.additional ?? [],
+      combined: c.chakra?.combined ?? null,
+      control: c.chakra?.control ?? 50,
+      reserves: c.chakra?.reserves ?? 50,
+    },
+    jinchuriki: {
+      isJinchuriki: c.jinchuriki?.isJinchuriki ?? false,
+      tailedBeast: c.jinchuriki?.tailedBeast ?? null,
+      mastery: c.jinchuriki?.mastery ?? null,
     },
     affiliation: c.affiliation || [],
     fightingStyle: c.fightingStyle || {

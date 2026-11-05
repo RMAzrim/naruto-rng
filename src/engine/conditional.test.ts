@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateConditionalSpins, spinConditionalSpin } from './conditional';
+import {
+  applyConditionalResults,
+  evaluateConditionalSpins,
+  spinConditionalSpin,
+} from './conditional';
 import { SeededRandom } from './rng';
 import { conditionalSpins } from '@/data/index';
 import type { Character } from '@/types';
@@ -29,6 +33,7 @@ function makeCharacter(overrides: Partial<Character> = {}): Character {
     bloodline: { trait: { spinId: 'bloodline', optionId: 'none', label: 'None', rarity: 'Common', sourceStatus: 'game-original' }, state: 'absent', description: '', sourceStatus: 'game-original' },
     dojutsu: { eye: { spinId: 'dojutsu', optionId: 'none', label: 'None', rarity: 'Common', sourceStatus: 'game-original' }, stage: 'None', mastery: 'none', staminaCost: 0, limitations: [], sourceStatus: 'game-original' },
     chakra: { natureCount: 1, primary: { spinId: 'chakra', optionId: 'fire', label: 'Fire Release', rarity: 'Common', sourceStatus: 'canon' }, secondary: null, additional: [], combined: null, control: 50, reserves: 50 },
+    jinchuriki: { isJinchuriki: false, tailedBeast: null, mastery: null },
     affiliation: [],
     fightingStyle: { primary: { spinId: 'style', optionId: 'taijutsu', label: 'Taijutsu', rarity: 'Common', sourceStatus: 'game-original' }, secondary: null, description: '', requirements: [] },
     summoning: { contract: { spinId: 'summoning', optionId: 'none', label: 'None', rarity: 'Common', sourceStatus: 'game-original' }, proficiency: 'none', specialLimitations: [] },
@@ -197,5 +202,56 @@ describe('spinConditionalSpin', () => {
     const result = spinConditionalSpin(def, char, rng, pool);
     if ('error' in result) throw new Error(result.error);
     expect(def.resultPool).toContain(result.option.id);
+  });
+
+  it('detects chakra prerequisites on secondary and additional natures', () => {
+    const char = makeCharacter({
+      clan: { spinId: 'clan', optionId: 'senju', label: 'Senju', rarity: 'Rare', sourceStatus: 'canon' },
+      chakra: {
+        natureCount: 2,
+        primary: { spinId: 'chakra', optionId: 'earth', label: 'Earth Release', rarity: 'Common', sourceStatus: 'canon' },
+        secondary: { spinId: 'chakra', optionId: 'water', label: 'Water Release', rarity: 'Common', sourceStatus: 'canon' },
+        additional: [],
+        combined: null,
+        control: 50,
+        reserves: 50,
+      },
+    });
+    const results = evaluateConditionalSpins(char, conditionalSpins);
+    const wood = results.find((r) => r.spinId === 'wood-release-eligibility');
+    expect(wood?.state).toBe('available');
+  });
+
+  it('maps conditional results onto character fields and history', () => {
+    const option = (id: string, label: string) => ({
+      id,
+      label,
+      rarity: 'Epic' as const,
+      weight: 1,
+      sourceStatus: 'canon' as const,
+    });
+    const char = makeCharacter();
+    const updated = applyConditionalResults(char, {
+      'sharingan-type': option('sharingan-3-tomoe', 'Three Tomoe Sharingan'),
+      'mangekyo-abilities': option('amaterasu', 'Amaterasu'),
+      'susanoo-stage': option('susanoo-armored', 'Susanoo: Armored'),
+      'byakugan-mastery': option('byakugan-advanced', 'Byakugan Advanced'),
+      'tenseigan-mastery': option('tenseigan-basic', 'Tenseigan Basic'),
+      'rinnegan-path': option('rinnegan-deva', 'Rinnegan: Deva Path'),
+      'wood-release-eligibility': option('wood-release-eligible', 'Wood Release Eligible'),
+    });
+
+    expect(updated.sharinganTomoe).toBe('three');
+    expect(updated.mangekyoAbility).toBe('amaterasu');
+    expect(updated.susanooStage).toBe('armored');
+    expect(updated.byakuganMastery).toBe('advanced');
+    expect(updated.tenseiganMastery).toBe('basic');
+    expect(updated.rinneganPath).toBe('deva');
+    expect(updated.woodRelease).toBe(true);
+    expect(updated.history.filter((entry) => entry.field === 'sharingan-type')).toHaveLength(1);
+    expect(char.sharinganTomoe).toBeUndefined();
+
+    const completed = evaluateConditionalSpins(updated, conditionalSpins);
+    expect(completed.find((r) => r.spinId === 'sharingan-type')?.state).toBe('completed');
   });
 });

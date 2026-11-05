@@ -29,6 +29,17 @@ function prerequisiteMet(
   );
   if (historyMatch) return true;
 
+  // Chakra prerequisites can match any possessed nature, not only the primary.
+  if (prereq.spinId === 'chakra') {
+    const natureIds = [
+      character.chakra?.primary?.optionId,
+      character.chakra?.secondary?.optionId,
+      ...(character.chakra?.additional ?? []).map((nature) => nature.optionId),
+      character.chakra?.combined?.optionId,
+    ].filter(Boolean);
+    return natureIds.includes(prereq.optionId);
+  }
+
   // Check top-level character fields by spinId mapping.
   const spinToField: Record<string, (char: Character) => string | undefined> = {
     era: (c) => c.era?.optionId,
@@ -38,7 +49,6 @@ function prerequisiteMet(
     heritage: (c) => c.heritage?.status.optionId,
     bloodline: (c) => c.bloodline?.trait.optionId,
     dojutsu: (c) => c.dojutsu?.eye.optionId,
-    chakra: (c) => c.chakra?.primary.optionId,
     affiliation: (c) => c.affiliation?.[0]?.organization.optionId,
     rank: (c) => c.rank?.rank.optionId,
     style: (c) => c.fightingStyle?.primary.optionId,
@@ -145,4 +155,84 @@ export function spinConditionalSpin(
     option: selected,
     explanation: definition.explanation,
   };
+}
+
+const TOMOE_BY_OPTION: Record<string, NonNullable<Character['sharinganTomoe']>> = {
+  'sharingan-1-tomoe': 'one',
+  'sharingan-2-tomoe': 'two',
+  'sharingan-3-tomoe': 'three',
+};
+
+const SUSANOO_BY_OPTION: Record<string, NonNullable<Character['susanooStage']>> = {
+  'susanoo-ribcage': 'ribcage',
+  'susanoo-skeletal': 'skeletal',
+  'susanoo-humanoid': 'humanoid',
+  'susanoo-armored': 'armored',
+  'susanoo-perfect': 'perfect',
+};
+
+const BYAKUGAN_BY_OPTION: Record<string, NonNullable<Character['byakuganMastery']>> = {
+  'byakugan-basic': 'basic',
+  'byakugan-advanced': 'advanced',
+  'byakugan-transcendent': 'transcendent',
+};
+
+const TENSEIGAN_BY_OPTION: Record<string, NonNullable<Character['tenseiganMastery']>> = {
+  'tenseigan-basic': 'basic',
+  'tenseigan-advanced': 'advanced',
+};
+
+const RINNEGAN_BY_OPTION: Record<string, NonNullable<Character['rinneganPath']>> = {
+  'rinnegan-deva': 'deva',
+  'rinnegan-asura': 'asura',
+  'rinnegan-human': 'human',
+  'rinnegan-animal': 'animal',
+  'rinnegan-preta': 'preta',
+};
+
+/**
+ * Fold the chosen conditional spins into a generated character. Every result is
+ * also written to history so completed chain nodes remain visible after saving.
+ */
+export function applyConditionalResults(
+  character: Character,
+  results: Record<string, SpinOption>
+): Character {
+  const next: Character = {
+    ...character,
+    history: [...(character.history ?? [])],
+  };
+  const resultFields = new Set(Object.keys(results));
+  const at = new Date().toISOString();
+
+  next.history = next.history.filter((entry) => !entry.field || !resultFields.has(entry.field));
+  for (const [spinId, option] of Object.entries(results)) {
+    next.history.push({ action: 'generate', field: spinId, current: option.id, at });
+  }
+
+  for (const [spinId, option] of Object.entries(results)) {
+    if (spinId === 'sharingan-type' && TOMOE_BY_OPTION[option.id]) {
+      next.sharinganTomoe = TOMOE_BY_OPTION[option.id];
+    }
+    if (spinId === 'mangekyo-abilities') {
+      next.mangekyoAbility = option.id;
+    }
+    if (spinId === 'susanoo-stage' && SUSANOO_BY_OPTION[option.id]) {
+      next.susanooStage = SUSANOO_BY_OPTION[option.id];
+    }
+    if (spinId === 'byakugan-mastery' && BYAKUGAN_BY_OPTION[option.id]) {
+      next.byakuganMastery = BYAKUGAN_BY_OPTION[option.id];
+    }
+    if (spinId === 'tenseigan-mastery' && TENSEIGAN_BY_OPTION[option.id]) {
+      next.tenseiganMastery = TENSEIGAN_BY_OPTION[option.id];
+    }
+    if (spinId === 'rinnegan-path' && RINNEGAN_BY_OPTION[option.id]) {
+      next.rinneganPath = RINNEGAN_BY_OPTION[option.id];
+    }
+    if (spinId === 'wood-release-eligibility' && option.id === 'wood-release-eligible') {
+      next.woodRelease = true;
+    }
+  }
+
+  return next;
 }

@@ -5,13 +5,18 @@ import { generateCharacter } from '@/engine/generation';
 import { dataContext } from '@/hooks/useGeneration';
 import { SeededRandom, weightedSelect } from '@/engine/rng';
 import { loadCollection, saveCharacter } from '@/engine/persistence';
-import { evaluateConditionalSpins, spinConditionalSpin } from '@/engine/conditional';
+import {
+  applyConditionalResults,
+  evaluateConditionalSpins,
+  spinConditionalSpin,
+} from '@/engine/conditional';
 import { conditionalSpins } from '@/data/index';
 import { useTheme, type DataMode } from '@/theme/ThemeContext';
 import {
   alignments,
   affiliations,
   bloodlineTraits,
+  chakraCounts,
   chakraNatures,
   clans,
   dojutsu,
@@ -23,6 +28,7 @@ import {
   ranks,
   reputations,
   summonings,
+  tailedBeasts,
   titles,
   villages,
   weaknesses,
@@ -38,7 +44,11 @@ type StageKey =
   | 'heritage'
   | 'bloodline'
   | 'dojutsu'
+  | 'chakraCount'
   | 'chakra'
+  | 'jinchuriki'
+  | 'tailedBeast'
+  | 'jinchurikiMastery'
   | 'affiliation'
   | 'rank'
   | 'style'
@@ -70,7 +80,11 @@ const STAGE_ORDER: StageKey[] = [
   'heritage',
   'bloodline',
   'dojutsu',
+  'chakraCount',
   'chakra',
+  'jinchuriki',
+  'tailedBeast',
+  'jinchurikiMastery',
   'affiliation',
   'rank',
   'style',
@@ -130,7 +144,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: heritageStatuses,
   },
   bloodline: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 1/5',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 1/9',
     title: 'Sifat darah',
     category: 'Sifat darah',
     prompt: 'Sifat apa yang diwariskan darahmu?',
@@ -139,7 +153,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: bloodlineTraits,
   },
   dojutsu: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 2/5',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 2/9',
     title: 'Dojutsu',
     category: 'Mata',
     prompt: 'Apakah kamu mewarisi teknik mata?',
@@ -147,17 +161,53 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     noun: 'dojutsu',
     options: dojutsu,
   },
+  chakraCount: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 3/9',
+    title: 'Jumlah Elemen',
+    category: 'Jumlah Elemen',
+    prompt: 'Berapa banyak elemen chakra dasar yang kamu miliki?',
+    hint: 'Semakin banyak elemen, semakin jarang karakternya. Pilihan ini menentukan berapa banyak elemen dasar yang diundi.',
+    noun: 'elemen',
+    options: chakraCounts,
+  },
   chakra: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 3/5',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 4/9',
     title: 'Elemen Chakra',
     category: 'Chakra',
     prompt: 'Elemen chakra primer apa yang kamu miliki?',
-    hint: 'Kebanyakan shinobi punya satu elemen utama, beberapa punya dua.',
+    hint: 'Hanya lima elemen dasar yang masuk undian. Elemen sekunder mengikuti jumlah elemen yang sudah dipilih.',
     noun: 'elemen chakra',
-    options: chakraNatures,
+    options: chakraNatures.filter((option) => option.tags?.includes('basic')),
+  },
+  jinchuriki: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 5/9',
+    title: 'Jinchuriki',
+    category: 'Jinchuriki',
+    prompt: 'Apakah kamu adalah jinchuriki (penampung biju)?',
+    hint: 'Jinchuriki sangat jarang. Hasil "Yes" membuka spin kompatibilitas biju dan penguasaan.',
+    noun: 'jinchuriki',
+    options: tailedBeasts.filter((option) => option.tags?.includes('jinchuriki')),
+  },
+  tailedBeast: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 6/9',
+    title: 'Kompatibilitas Biju',
+    category: 'Biju',
+    prompt: 'Biju mana yang kompatibel denganmu?',
+    hint: 'Hanya tersedia jika hasil Jinchuriki adalah "Yes".',
+    noun: 'biju',
+    options: tailedBeasts.filter((option) => option.tags?.includes('tailed-beast')),
+  },
+  jinchurikiMastery: {
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 7/9',
+    title: 'Penguasaan Jinchuriki',
+    category: 'Penguasaan Jinchuriki',
+    prompt: 'Seberapa baik kamu mengendalikan biju?',
+    hint: 'Hanya tersedia jika kamu jinchuriki dan sudah mendapat biju yang kompatibel.',
+    noun: 'penguasaan',
+    options: tailedBeasts.filter((option) => option.tags?.includes('mastery')),
   },
   affiliation: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 4/5',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 8/9',
     title: 'Afiliasi',
     category: 'Afiliasi',
     prompt: 'Organisasi mana yang terkait denganmu?',
@@ -166,7 +216,7 @@ const STAGES: Record<SpinStageKey, StageMeta> = {
     options: affiliations,
   },
   rank: {
-    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 5/5',
+    eyebrow: 'Tahap 04 · Kekuatan & Kemampuan · 9/9',
     title: 'Ranga',
     category: 'Ranga',
     prompt: 'Sejauh mana reputasi militermu?',
@@ -243,7 +293,7 @@ const GROUPS: { id: string; label: string; keys: StageKey[] }[] = [
   { id: 'name', label: 'Nama', keys: ['name'] },
   { id: 'era', label: 'Era', keys: ['era', 'alignment'] },
   { id: 'village', label: 'Asal & Desa', keys: ['village', 'clan', 'heritage'] },
-  { id: 'power', label: 'Kekuatan', keys: ['bloodline', 'dojutsu', 'chakra', 'affiliation', 'rank'] },
+  { id: 'power', label: 'Kekuatan', keys: ['bloodline', 'dojutsu', 'chakraCount', 'chakra', 'jinchuriki', 'tailedBeast', 'jinchurikiMastery', 'affiliation', 'rank'] },
   { id: 'style', label: 'Gaya & Hewan', keys: ['style', 'summoning'] },
   { id: 'character', label: 'Kepribadian', keys: ['personality', 'weakness', 'fate'] },
   { id: 'title', label: 'Gelar', keys: ['title', 'reputation'] },
@@ -309,6 +359,8 @@ export default function GeneratorPage() {
     setPending(null);
     setSpinning(false);
     setCharacter(null);
+    setConditionalResults({});
+    setConditionalSpinStates([]);
     setSaved(false);
     setError(null);
     setStageKey((previous) => (previous === 'name' ? 'name' : 'era'));
@@ -326,73 +378,108 @@ export default function GeneratorPage() {
   }, [refreshLeaderboard]);
 
   useEffect(() => {
-    // Build a minimal character draft from current answers for conditional spin evaluation.
-    const draft: Record<string, any> = {
-      era: answers.era ? { optionId: answers.era.id } : undefined,
-      alignment: answers.alignment ? { optionId: answers.alignment.id } : undefined,
-      origin: answers.village ? { birthplace: { optionId: answers.village.id } } : undefined,
-      clan: answers.clan ? { optionId: answers.clan.id } : undefined,
-      heritage: answers.heritage ? { status: { optionId: answers.heritage.id } } : undefined,
-      bloodline: answers.bloodline ? { trait: { optionId: answers.bloodline.id } } : undefined,
-      dojutsu: answers.dojutsu ? { eye: { optionId: answers.dojutsu.id } } : undefined,
-      chakra: answers.chakra ? { primary: { optionId: answers.chakra.id } } : undefined,
-      rank: answers.rank ? { rank: { optionId: answers.rank.id } } : undefined,
-    };
-
-    const results = evaluateConditionalSpins(draft as any, conditionalSpins);
+    // Conditional abilities are evaluated against the finished character so all
+    // generated natures, dojutsu, and conditional history are available.
+    if (!character) {
+      setConditionalSpinStates([]);
+      return;
+    }
+    const results = evaluateConditionalSpins(character, conditionalSpins);
     setConditionalSpinStates(
-      results.map((r) => {
-        const def = conditionalSpins.find((d) => d.id === r.spinId);
+      results.map((result) => {
+        const def = conditionalSpins.find((d) => d.id === result.spinId);
         return {
-          spinId: r.spinId,
-          state: r.state,
-          label: def?.name ?? r.spinId,
-          unlockReason: r.state === 'available' ? def?.explanation : r.state === 'locked' ? def?.prerequisites.map((p) => p.message).join(' · ') : undefined,
+          spinId: result.spinId,
+          state: result.state,
+          label: def?.name ?? result.spinId,
+          unlockReason:
+            result.state === 'available'
+              ? def?.explanation
+              : result.state === 'locked'
+                ? def?.prerequisites.map((p) => p.message).join(' · ')
+                : undefined,
         };
       })
     );
-  }, [answers, conditionalSpins]);
+  }, [character, conditionalResults, conditionalSpins]);
 
   const wheelOptions = useMemo(() => {
+    const eraId = answers.era?.id;
+    /** Apply era and strict/AU eligibility to every stage's pool. */
+    const filter = (options: SpinOption[]) =>
+      eligible(
+        options.filter(
+          (option) =>
+            !option.eraEligibility || !eraId || option.eraEligibility.includes(eraId)
+        ),
+        mode
+      );
+
     switch (stageKey) {
       case 'era':
-        return eligible(STAGES.era.options, mode);
+        return filter(STAGES.era.options);
       case 'alignment':
-        return eligible(STAGES.alignment.options, mode);
+        return filter(STAGES.alignment.options);
       case 'village':
-        return eligible(STAGES.village.options, mode);
-      case 'clan':
-        return eligible(STAGES.clan.options, mode);
+        return filter(STAGES.village.options);
+      case 'clan': {
+        const villageId = answers.village?.id;
+        const filteredClans = STAGES.clan.options.filter((clan) => {
+          const villages = clan.villages ?? [];
+          // Clans without a village list (or marked independent) are available
+          // everywhere; the rest only appear in their matching village.
+          if (villages.length === 0 || villages.includes('independent')) return true;
+          return Boolean(villageId) && villages.includes(villageId as string);
+        });
+        return filter(filteredClans);
+      }
       case 'heritage':
-        return eligible(STAGES.heritage.options, mode);
+        return filter(STAGES.heritage.options);
       case 'bloodline':
-        return eligible(STAGES.bloodline.options, mode);
+        return filter(STAGES.bloodline.options);
       case 'dojutsu':
-        return eligible(STAGES.dojutsu.options, mode);
+        return filter(
+          STAGES.dojutsu.options.filter((option) => !option.tags?.includes('conditional'))
+        );
+      case 'chakraCount':
+        return filter(STAGES.chakraCount.options);
       case 'chakra':
-        return eligible(STAGES.chakra.options, mode);
+        return filter(STAGES.chakra.options);
+      case 'jinchuriki':
+        return filter(STAGES.jinchuriki.options);
+      case 'tailedBeast': {
+        const jinOpt = answers.jinchuriki;
+        if (!jinOpt || jinOpt.id !== 'jinchuriki-yes') return [];
+        return filter(STAGES.tailedBeast.options);
+      }
+      case 'jinchurikiMastery': {
+        const jinOpt = answers.jinchuriki;
+        const tbOpt = answers.tailedBeast;
+        if (!jinOpt || jinOpt.id !== 'jinchuriki-yes' || !tbOpt) return [];
+        return filter(STAGES.jinchurikiMastery.options);
+      }
       case 'affiliation':
-        return eligible(STAGES.affiliation.options, mode);
+        return filter(STAGES.affiliation.options);
       case 'rank':
-        return eligible(STAGES.rank.options, mode);
+        return filter(STAGES.rank.options);
       case 'style':
-        return eligible(STAGES.style.options, mode);
+        return filter(STAGES.style.options);
       case 'summoning':
-        return eligible(STAGES.summoning.options, mode);
+        return filter(STAGES.summoning.options);
       case 'personality':
-        return eligible(STAGES.personality.options, mode);
+        return filter(STAGES.personality.options);
       case 'weakness':
-        return eligible(STAGES.weakness.options, mode);
+        return filter(STAGES.weakness.options);
       case 'fate':
-        return eligible(STAGES.fate.options, mode);
+        return filter(STAGES.fate.options);
       case 'title':
-        return eligible(STAGES.title.options, mode);
+        return filter(STAGES.title.options);
       case 'reputation':
-        return eligible(STAGES.reputation.options, mode);
+        return filter(STAGES.reputation.options);
       default:
         return [];
     }
-  }, [stageKey, mode]);
+  }, [stageKey, mode, answers]);
 
   const displayOptions = useMemo(() => {
     if (stageKey === 'name' || stageKey === 'result') return eligible(STAGES.clan.options, mode);
@@ -402,13 +489,17 @@ export default function GeneratorPage() {
   const currentAnswer = stageKey !== 'name' && stageKey !== 'result' ? answers[stageKey] : undefined;
   const currentStage = stageKey !== 'name' && stageKey !== 'result' ? STAGES[stageKey] : null;
   const activeGroupIndex = GROUPS.findIndex((group) => group.keys.includes(stageKey));
+  const visibleConditionalSpins = useMemo(
+    () => conditionalSpinStates.filter((spin) => spin.state !== 'locked'),
+    [conditionalSpinStates]
+  );
 
   const rolls = useMemo(() => {
     const rows: { category: string; result: string }[] = [];
     if (name.trim() && stageKey !== 'name') {
       rows.push({ category: 'Nama', result: name.trim() });
     }
-    (['era', 'alignment', 'village', 'clan', 'heritage', 'bloodline', 'dojutsu', 'chakra', 'affiliation', 'rank', 'style', 'summoning', 'personality', 'weakness', 'fate', 'title', 'reputation'] as SpinStageKey[]).forEach((key) => {
+    (['era', 'alignment', 'village', 'clan', 'heritage', 'bloodline', 'dojutsu', 'chakraCount', 'chakra', 'jinchuriki', 'tailedBeast', 'jinchurikiMastery', 'affiliation', 'rank', 'style', 'summoning', 'personality', 'weakness', 'fate', 'title', 'reputation'] as SpinStageKey[]).forEach((key) => {
       const answer = answers[key];
       if (answer) rows.push({ category: STAGES[key].category, result: answer.label });
     });
@@ -447,6 +538,8 @@ export default function GeneratorPage() {
     if (pending && stageKey !== 'name' && stageKey !== 'result') {
       setAnswers((previous) => ({ ...previous, [stageKey]: pending }));
       setCharacter(null);
+      setConditionalResults({});
+      setConditionalSpinStates([]);
       setSaved(false);
     }
     setSpinning(false);
@@ -454,7 +547,7 @@ export default function GeneratorPage() {
   }, [pending, stageKey]);
 
   const handleConditionalSpin = useCallback(async (spinId: string) => {
-    if (conditionalSpinning || conditionalResults[spinId]) return;
+    if (conditionalSpinning || conditionalResults[spinId] || !character) return;
 
     const def = conditionalSpins.find((d) => d.id === spinId);
     if (!def) return;
@@ -463,8 +556,26 @@ export default function GeneratorPage() {
 
     try {
       const rng = new SeededRandom(`cond-${spinId}-${Date.now()}-${Math.random()}`);
-      const allOptions = [...eras, ...alignments, ...villages, ...clans, ...heritageStatuses, ...bloodlineTraits, ...dojutsu, ...chakraNatures, ...affiliations, ...fightingStyles, ...summonings, ...ranks, ...personalities, ...weaknesses, ...fates, ...titles, ...reputations];
-      const result = spinConditionalSpin(def, {} as any, rng, allOptions as SpinOption[]);
+      const allOptions = [
+        ...eras,
+        ...alignments,
+        ...villages,
+        ...clans,
+        ...heritageStatuses,
+        ...bloodlineTraits,
+        ...dojutsu,
+        ...chakraNatures,
+        ...affiliations,
+        ...fightingStyles,
+        ...summonings,
+        ...ranks,
+        ...personalities,
+        ...weaknesses,
+        ...fates,
+        ...titles,
+        ...reputations,
+      ];
+      const result = spinConditionalSpin(def, character, rng, allOptions as SpinOption[]);
 
       if ('error' in result) {
         setError(result.error);
@@ -472,48 +583,35 @@ export default function GeneratorPage() {
         return;
       }
 
-      setConditionalResults((prev) => ({ ...prev, [spinId]: result.option }));
-
-      // Evaluate results to update states
-      const draft: Record<string, any> = {
-        era: answers.era ? { optionId: answers.era.id } : undefined,
-        alignment: answers.alignment ? { optionId: answers.alignment.id } : undefined,
-        origin: answers.village ? { birthplace: { optionId: answers.village.id } } : undefined,
-        clan: answers.clan ? { optionId: answers.clan.id } : undefined,
-        heritage: answers.heritage ? { status: { optionId: answers.heritage.id } } : undefined,
-        bloodline: answers.bloodline ? { trait: { optionId: answers.bloodline.id } } : undefined,
-        dojutsu: answers.dojutsu ? { eye: { optionId: answers.dojutsu.id } } : undefined,
-        chakra: answers.chakra ? { primary: { optionId: answers.chakra.id } } : undefined,
-        rank: answers.rank ? { rank: { optionId: answers.rank.id } } : undefined,
-      };
-
-      const results = evaluateConditionalSpins(draft as any, conditionalSpins);
-      setConditionalSpinStates(
-        results.map((r) => {
-          const d = conditionalSpins.find((d2) => d2.id === r.spinId);
-          return {
-            spinId: r.spinId,
-            state: r.state,
-            label: d?.name ?? r.spinId,
-            unlockReason: r.state === 'available' ? d?.explanation : r.state === 'locked' ? d?.prerequisites.map((p) => p.message).join(' · ') : undefined,
-          };
-        })
-      );
-
+      const nextResults = { ...conditionalResults, [spinId]: result.option };
+      setConditionalResults(nextResults);
+      const updated = applyConditionalResults(character, nextResults);
+      setCharacter(updated);
+      setSaved(false);
+      setError(null);
       setConditionalSpinning(null);
     } catch (err) {
       setConditionalSpinning(null);
       setError(err instanceof Error ? err.message : 'Gagal memutar spin bersyarat.');
     }
-  }, [answers, conditionalSpinning, conditionalSpins]);
+  }, [character, conditionalSpinning, conditionalResults, conditionalSpins]);
 
   const handleReroll = useCallback(() => {
     if (stageKey === 'name' || stageKey === 'result') return;
     setAnswers((previous) => {
       const next = { ...previous };
       delete next[stageKey];
+      // Dependent answers must be rolled again after their source changes.
+      if (stageKey === 'village') delete next.clan;
+      if (stageKey === 'jinchuriki') {
+        delete next.tailedBeast;
+        delete next.jinchurikiMastery;
+      }
+      if (stageKey === 'tailedBeast') delete next.jinchurikiMastery;
       return next;
     });
+    setConditionalResults({});
+    setConditionalSpinStates([]);
     setPending(null);
     setSpinning(false);
     setCharacter(null);
@@ -523,8 +621,13 @@ export default function GeneratorPage() {
   const handleNext = useCallback(() => {
     const index = STAGE_ORDER.indexOf(stageKey);
     if (index < 0 || index >= STAGE_ORDER.length - 1) return;
-    setStageKey(STAGE_ORDER[index + 1]);
-  }, [stageKey]);
+    let next = STAGE_ORDER[index + 1];
+    // Non-jinchuriki skip both the biju compatibility and mastery spins.
+    if (stageKey === 'jinchuriki' && answers.jinchuriki?.id !== 'jinchuriki-yes') {
+      next = 'affiliation';
+    }
+    setStageKey(next);
+  }, [answers.jinchuriki, stageKey]);
 
   const finalizeCharacter = useCallback(() => {
     const trimmed = name.trim();
@@ -544,7 +647,11 @@ export default function GeneratorPage() {
           heritageId: answers.heritage?.id,
           bloodlineId: answers.bloodline?.id,
           dojutsuId: answers.dojutsu?.id,
+          chakraCountId: answers.chakraCount?.id,
           chakraId: answers.chakra?.id,
+          jinchurikiId: answers.jinchuriki?.id,
+          tailedBeastId: answers.tailedBeast?.id,
+          jinchurikiMasteryId: answers.jinchurikiMastery?.id,
           affiliationId: answers.affiliation?.id,
           rankId: answers.rank?.id,
           fightingStyleId: answers.style?.id,
@@ -558,6 +665,8 @@ export default function GeneratorPage() {
         dataContext
       );
       setCharacter(generated);
+      setConditionalResults({});
+      setConditionalSpinStates([]);
       setSaved(false);
       setError(null);
     } catch (err) {
@@ -593,6 +702,8 @@ export default function GeneratorPage() {
     setSpinning(false);
     setSpinToken(0);
     setCharacter(null);
+    setConditionalResults({});
+    setConditionalSpinStates([]);
     setSaved(false);
     setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -615,6 +726,10 @@ export default function GeneratorPage() {
           const done = group.keys.every((key) => {
             if (key === 'name') return stageKey !== 'name';
             if (key === 'result') return Boolean(character);
+            // These stages are optional and count as done when the character is not a jinchuriki.
+            if (key === 'tailedBeast' || key === 'jinchurikiMastery') {
+              return answers.jinchuriki?.id !== 'jinchuriki-yes' || Boolean(answers[key]);
+            }
             return Boolean(answers[key]);
           });
           return (
@@ -773,11 +888,15 @@ export default function GeneratorPage() {
             </>
           )}
 
-          {conditionalSpinStates.length > 0 && (
+          {character && visibleConditionalSpins.length > 0 && (
             <section className="card conditional-spins" aria-label="Spin bersyarat">
               <div className="eyebrow">Spin Bersyarat</div>
               <h2 className="stage-title">Kemampuan Bersyarat</h2>
-              {conditionalSpinStates.map((spin) => (
+              <p className="conditional-hint">
+                Spin opsional ini hanya terbuka jika karakter memenuhi prasyarat lore.
+                Hasilnya langsung diterapkan ke karakter.
+              </p>
+              {visibleConditionalSpins.map((spin) => (
                 <div key={spin.spinId} className={`conditional-item state-${spin.state}`}>
                   <div className="conditional-header">
                     <span className="conditional-name">{spin.label}</span>
@@ -788,7 +907,7 @@ export default function GeneratorPage() {
                   {spin.unlockReason && (
                     <p className="conditional-hint">{spin.unlockReason}</p>
                   )}
-                  {spin.state === 'available' && conditionalResults[spin.spinId] && (
+                  {conditionalResults[spin.spinId] && (
                     <div className="conditional-result">
                       <strong>Hasil:</strong> {conditionalResults[spin.spinId].label}
                     </div>
@@ -829,9 +948,26 @@ export default function GeneratorPage() {
                     <span>{character.clan.label}</span>
                     <span>{character.heritage.status.label}</span>
                     <span>{character.bloodline.trait.label}</span>
+                    <span>{character.chakra.natureCount} elemen</span>
                     <span>{character.chakra.primary.label}</span>
                     <span>{character.dojutsu.eye.label}</span>
+                    {character.jinchuriki.isJinchuriki && character.jinchuriki.tailedBeast && (
+                      <span>{character.jinchuriki.tailedBeast.label}</span>
+                    )}
                   </div>
+
+                  {character.jinchuriki.isJinchuriki && (
+                    <p className="hint">
+                      Jinchuriki: {character.jinchuriki.tailedBeast?.label ?? '—'} · Penguasaan:{' '}
+                      {character.jinchuriki.mastery?.label ?? '—'}
+                    </p>
+                  )}
+
+                  {visibleConditionalSpins.length > 0 && (
+                    <p className="hint">
+                      Ada kemampuan bersyarat yang bisa diputar sebelum menyimpan karakter.
+                    </p>
+                  )}
 
                   <div className="panel-actions">
                     <button type="button" className="btn btn-primary" onClick={saveAndOpen}>
@@ -933,7 +1069,10 @@ export default function GeneratorPage() {
               <div className="power-class">{powerClass(character.rank.combatTier)}</div>
               <p>
                 {character.abilities.length} kemampuan · {character.weaknesses.length} kelemahan ·
-                {' '}{character.chakra.primary.label} · {character.dojutsu.eye.label}
+                {' '}{character.chakra.natureCount} elemen · {character.dojutsu.eye.label}
+                {character.jinchuriki.isJinchuriki && character.jinchuriki.tailedBeast
+                  ? ` · ${character.jinchuriki.tailedBeast.label}`
+                  : ''}
               </p>
             </div>
           </div>
@@ -987,8 +1126,12 @@ export default function GeneratorPage() {
             <span>{eligible(clans, mode).length} klan</span>
             <span>{eligible(heritageStatuses, mode).length} status warisan</span>
             <span>{eligible(bloodlineTraits, mode).length} sifat darah</span>
-            <span>{eligible(dojutsu, mode).length} dojutsu</span>
-            <span>{eligible(chakraNatures, mode).length} elemen chakra</span>
+            <span>{eligible(dojutsu.filter((option) => !option.tags?.includes('conditional')), mode).length} dojutsu</span>
+            <span>{eligible(chakraCounts, mode).length} tingkat jumlah elemen</span>
+            <span>{eligible(chakraNatures.filter((option) => option.tags?.includes('basic')), mode).length} elemen dasar</span>
+            <span>{eligible(tailedBeasts.filter((t) => t.tags?.includes('jinchuriki')), mode).length} opsi jinchuriki</span>
+            <span>{eligible(tailedBeasts.filter((t) => t.tags?.includes('tailed-beast')), mode).length} biju</span>
+            <span>{eligible(tailedBeasts.filter((t) => t.tags?.includes('mastery')), mode).length} penguasaan jinchuriki</span>
             <span>{eligible(affiliations, mode).length} afiliasi</span>
             <span>{eligible(ranks, mode).length} ranga</span>
             <span>{eligible(fightingStyles, mode).length} gaya</span>

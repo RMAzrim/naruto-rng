@@ -12,6 +12,8 @@ export type SpinOption = {
   sourceStatus: SourceStatus;
   description?: string;
   eraEligibility?: string[]; // era IDs where allowed
+  /** Restricts an option (usually a clan) to one or more villages. */
+  villages?: string[];
   prerequisites?: string[]; // option IDs required
   exclusions?: string[]; // option IDs that cannot coexist
   tags?: string[];
@@ -79,6 +81,12 @@ export type ChakraData = {
   combined: SpinResult | null;
   control: number; // 0-100
   reserves: number; // 0-100
+};
+
+export type JinchurikiData = {
+  isJinchuriki: boolean;
+  tailedBeast: SpinResult | null;
+  mastery: SpinResult | null;
 };
 
 export type AffiliationData = {
@@ -211,6 +219,7 @@ export type Character = {
   bloodline: BloodlineData;
   dojutsu: DojutsuData;
   chakra: ChakraData;
+  jinchuriki: JinchurikiData;
   affiliation: AffiliationData[];
   fightingStyle: FightingStyleData;
   summoning: SummoningData;

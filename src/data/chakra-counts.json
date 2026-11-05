@@ -1,0 +1,7 @@
+[
+  { "id": "count-1", "label": "1 Element", "description": "One basic chakra nature (most common).", "category": "Chakra Count", "rarity": "Common", "weight": 45, "sourceStatus": "game-original", "tags": ["chakra-count"] },
+  { "id": "count-2", "label": "2 Elements", "description": "Two basic chakra natures (for example Fire + Wind).", "category": "Chakra Count", "rarity": "Uncommon", "weight": 25, "sourceStatus": "game-original", "tags": ["chakra-count"] },
+  { "id": "count-3", "label": "3 Elements", "description": "Three basic chakra natures.", "category": "Chakra Count", "rarity": "Rare", "weight": 15, "sourceStatus": "game-original", "tags": ["chakra-count"] },
+  { "id": "count-4", "label": "4 Elements", "description": "Four basic chakra natures (very rare).", "category": "Chakra Count", "rarity": "Epic", "weight": 10, "sourceStatus": "game-original", "tags": ["chakra-count"] },
+  { "id": "count-5", "label": "5 Elements", "description": "All five basic chakra natures (legendary).", "category": "Chakra Count", "rarity": "Legendary", "weight": 5, "sourceStatus": "game-original", "tags": ["chakra-count"] }
+]

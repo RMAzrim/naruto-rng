@@ -140,6 +140,33 @@ export function computeBattleAbilityMods(char: Character): BattleAbilityMods {
     }
   }
 
+  // Jinchuriki gain a flat biju bonus plus a scaling mastery bonus.
+  if (char.jinchuriki?.isJinchuriki && char.jinchuriki.tailedBeast) {
+    mods.damageBonus += 0.15;
+    mods.specialActions.push(`jinchuriki-${char.jinchuriki.tailedBeast.optionId}`);
+
+    const masteryBonus: Record<
+      string,
+      { damage: number; chakra: number; reduction: number; stamina: number }
+    > = {
+      'mastery-poor': { damage: 0, chakra: 0, reduction: 0, stamina: 0 },
+      'mastery-low': { damage: 0.05, chakra: 5, reduction: 0, stamina: 0 },
+      'mastery-average': { damage: 0.1, chakra: 10, reduction: 0, stamina: 0 },
+      'mastery-good': { damage: 0.15, chakra: 15, reduction: 5, stamina: 0 },
+      'mastery-excellent': { damage: 0.25, chakra: 20, reduction: 10, stamina: 5 },
+      'mastery-perfect': { damage: 0.35, chakra: 25, reduction: 15, stamina: 10 },
+    };
+    const masteryId = char.jinchuriki.mastery?.optionId;
+    const mastery = masteryId ? masteryBonus[masteryId] : undefined;
+    if (mastery) {
+      mods.damageBonus += mastery.damage;
+      mods.chakraCostReduction += mastery.chakra;
+      mods.damageReduction += mastery.reduction;
+      mods.staminaCostReduction += mastery.stamina;
+      mods.specialActions.push(`biju-mastery-${masteryId}`);
+    }
+  }
+
   // Combined natures grant minor bonuses.
   if (char.woodRelease) {
     mods.damageReduction += 5;
@@ -205,6 +232,12 @@ export function battleAbilityExplanations(char: Character): string[] {
   }
   if (char.rinneganPath) {
     explanations.push(`Rinnegan: ${char.rinneganPath} Path.`);
+  }
+  if (char.jinchuriki?.isJinchuriki && char.jinchuriki.tailedBeast) {
+    const masteryLabel = char.jinchuriki.mastery?.label ?? 'Uncontrolled';
+    explanations.push(
+      `Jinchuriki: ${char.jinchuriki.tailedBeast.label} (${masteryLabel}).`
+    );
   }
   if (char.woodRelease) explanations.push('Wood Release (Mokuton).');
   if (char.iceRelease) explanations.push('Ice Release (Hyōton).');

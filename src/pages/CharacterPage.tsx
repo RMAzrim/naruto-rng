@@ -132,12 +132,47 @@ export default function CharacterPage() {
           <h3 style={{ fontSize: '0.95rem', marginBottom: '0.6rem', color: 'var(--accent)' }}>Kemampuan</h3>
           <div className="dossier-list">
             <div><strong>Dōjutsu:</strong> {character.dojutsu.eye.label} ({character.dojutsu.stage})</div>
+            {character.sharinganTomoe && (
+              <div><strong>Sharingan:</strong> {character.sharinganTomoe} tomoe</div>
+            )}
+            {character.mangekyoAbility && (
+              <div><strong>Mangekyō:</strong> {character.mangekyoAbility}</div>
+            )}
+            {character.susanooStage && (
+              <div><strong>Susanoo:</strong> {character.susanooStage}</div>
+            )}
+            {character.byakuganMastery && (
+              <div><strong>Byakugan mastery:</strong> {character.byakuganMastery}</div>
+            )}
+            {character.tenseiganMastery && (
+              <div><strong>Tenseigan mastery:</strong> {character.tenseiganMastery}</div>
+            )}
+            {character.rinneganPath && (
+              <div><strong>Rinnegan path:</strong> {character.rinneganPath}</div>
+            )}
             <div>
-              <strong>Chakra:</strong> {character.chakra.primary.label}
+              <strong>Chakra:</strong> {character.chakra.natureCount ?? 1} elemen ·{' '}
+              {character.chakra.primary.label}
               {character.chakra.secondary ? ` + ${character.chakra.secondary.label}` : ''}
-              {character.chakra.additional.length > 0 ? ` · +${character.chakra.additional.length}` : ''}
+              {character.chakra.additional?.length
+                ? ` · +${character.chakra.additional.length}`
+                : ''}
               {character.chakra.combined ? ` · Gabungan: ${character.chakra.combined.label}` : ''}
             </div>
+            <div>
+              <strong>Jinchuriki:</strong>{' '}
+              {character.jinchuriki?.isJinchuriki && character.jinchuriki.tailedBeast
+                ? `${character.jinchuriki.tailedBeast.label} · ${character.jinchuriki.mastery?.label ?? 'Uncontrolled'}`
+                : 'Bukan jinchuriki'}
+            </div>
+            {(character.woodRelease || character.iceRelease) && (
+              <div>
+                <strong>Kekkei Genkai:</strong>{' '}
+                {[character.woodRelease ? 'Wood Release' : null, character.iceRelease ? 'Ice Release' : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </div>
+            )}
             <div><strong>Gaya:</strong> {character.fightingStyle.primary.label}</div>
             <div><strong>Summoning:</strong> {character.summoning.contract.label} ({character.summoning.proficiency})</div>
             <div><strong>Kemampuan:</strong> {character.abilities.map((ability) => ability.name).join(', ') || '—'}</div>

@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   bloodlineTraits,
+  chakraCounts,
   clans,
   fightingStyles,
   heritageStatuses,
   personalities,
   ranks,
+  tailedBeasts,
   titles,
+  villages,
   weaknesses,
 } from './index';
 import type { SpinOption } from '@/types';
@@ -20,6 +23,8 @@ const systems: [string, SpinOption[]][] = [
   ['weaknesses', weaknesses],
   ['fighting styles', fightingStyles],
   ['ranks', ranks],
+  ['chakra counts', chakraCounts],
+  ['tailed beasts', tailedBeasts],
 ];
 
 describe('dataset contract', () => {
@@ -37,5 +42,28 @@ describe('dataset contract', () => {
         `${name} weights should be positive`
       ).toBe(true);
     }
+  });
+
+  it('restricts village-specific clans to known villages', () => {
+    const villageIds = new Set(villages.map((village) => village.id));
+    for (const clan of clans) {
+      for (const villageId of clan.villages ?? []) {
+        expect(villageIds.has(villageId), `${clan.id} references unknown village ${villageId}`).toBe(true);
+      }
+    }
+
+    const uchiha = clans.find((clan) => clan.id === 'uchiha');
+    expect(uchiha?.villages).toEqual(['konoha']);
+
+    const uzumaki = clans.find((clan) => clan.id === 'uzumaki');
+    expect(uzumaki?.villages).toContain('konoha');
+    expect(uzumaki?.villages).toContain('uzushio');
+  });
+
+  it('ships a complete jinchuriki chain', () => {
+    expect(tailedBeasts.filter((option) => option.tags?.includes('jinchuriki'))).toHaveLength(2);
+    expect(tailedBeasts.filter((option) => option.tags?.includes('tailed-beast'))).toHaveLength(9);
+    expect(tailedBeasts.filter((option) => option.tags?.includes('mastery'))).toHaveLength(6);
+    expect(chakraCounts).toHaveLength(5);
   });
 });

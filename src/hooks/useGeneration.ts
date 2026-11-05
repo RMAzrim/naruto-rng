@@ -3,9 +3,9 @@ import { generateCharacter } from '@/engine/generation';
 import type { GenerationSettings, DataContext } from '@/engine/generation';
 import {
   eras, titles, alignments, villages, clans, heritageStatuses,
-  bloodlineTraits, dojutsu, chakraNatures, affiliations, fightingStyles,
-  summonings, ranks, personalities, weaknesses, fates, reputations,
-  abilities, rules,
+  bloodlineTraits, dojutsu, chakraNatures, chakraCounts, tailedBeasts,
+  affiliations, fightingStyles, summonings, ranks, personalities, weaknesses,
+  fates, reputations, abilities, rules,
 } from '@/data/index';
 
 export const dataContext: DataContext = {
@@ -18,6 +18,8 @@ export const dataContext: DataContext = {
   bloodlineTraits,
   dojutsu,
   chakraNatures,
+  chakraCounts,
+  tailedBeasts,
   affiliations,
   fightingStyles,
   summonings,
